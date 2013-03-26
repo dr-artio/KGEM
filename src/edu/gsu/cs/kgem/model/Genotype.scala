@@ -3,7 +3,6 @@ package edu.gsu.cs.kgem.model
 import org.biojava3.core.sequence.compound.{DNACompoundSet, NucleotideCompound}
 import collection.JavaConversions._
 import collection.mutable
-import net.sf.samtools.SAMRecord
 
 /**
  * Created with IntelliJ IDEA.
@@ -76,17 +75,15 @@ class Genotype(n: Int) {
     })
   }
 
-  def hr(r: Read) = {
-    var s = r.beg
-    var res = 1.0
-    while (s < r.end) {
-      res *= data(s)(r.seq(s).toString)
-      s += 1
-    }
-    res
+  def sqNormalize = {
+    normalize
+    data foreach (m => {
+      val s = m.values.map(v => v*v).sum
+      if (s != 0) m foreach (e => m(e._1) /= s)
+    })
   }
 
-  def normalize = {
+  private def normalize = {
     data foreach (m => {
       val s = m.values.sum
       if (s != 0) m foreach (e => m(e._1) /= s)
@@ -99,7 +96,7 @@ class Genotype(n: Int) {
       m foreach (e => m(e._1) = eps)
       if (s._2 > 0) m(s._1) = 1
     })
-    normalize
+    sqNormalize
     data
   }
 
@@ -114,7 +111,7 @@ class Genotype(n: Int) {
 
   override def toString = {
     val s = new StringBuilder
-    data foreach (m => s ++= (m.toString + "\n"))
+    data foreach (m => s ++= (m + "\n"))
     s.toString
   }
 }

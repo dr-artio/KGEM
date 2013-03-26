@@ -1,7 +1,5 @@
 package edu.gsu.cs.kgem.model
 
-import java.util.Date
-
 
 /**
  * Created with IntelliJ IDEA.
@@ -27,7 +25,6 @@ class EM(gens: List[Genotype], reads: List[Read]) {
     })
     d
   }
-
 
   def initHrs: Array[Array[Double]] = {
     val hrs = Array.fill[Double](gens.size, reads.size) {
@@ -55,6 +52,11 @@ class EM(gens: List[Genotype], reads: List[Read]) {
       g += 1
     }
     hrs
+  }
+
+  def run = {
+    while (mStep(eStep) > eps) {}
+    gs foreach (e => gens(e).freq = freqs(e))
   }
 
   def eStep = {
@@ -85,10 +87,5 @@ class EM(gens: List[Genotype], reads: List[Read]) {
     }
     println(change)
     change
-  }
-
-  def run = {
-    while (mStep(eStep) > eps) {}
-    gs foreach (e => gens(e).freq = freqs(e))
   }
 }

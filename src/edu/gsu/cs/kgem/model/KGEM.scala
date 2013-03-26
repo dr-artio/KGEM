@@ -1,7 +1,6 @@
 package edu.gsu.cs.kgem.model
 
 import collection.mutable
-import java.util.Date
 
 /**
  * Created with IntelliJ IDEA.
