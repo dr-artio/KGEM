@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>edu.gsu.cs</groupId>
+    <artifactId>KGEM</artifactId>
+    <version>1.0</version>
+    <packaging>jar</packaging>
+
+    <name>KGEM</name>
+    <url>http://maven.apache.org</url>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <finalName>k-gem</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <archive>
+                        <manifest>
+                            <mainClass>edu.gsu.cs.kgem.exec.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <dependencies>
+         <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-compiler</artifactId>
+                <version>2.9.1</version>
+                <scope>compile</scope>
+            </dependency>
+        <dependency>
+            <groupId>org.biojava</groupId>
+            <artifactId>biojava3-core</artifactId>
+            <version>3.0.5</version>
+        </dependency>
+        <!-- other biojava jars as needed -->
+        <dependency>
+            <groupId>net.sourceforge.argparse4j</groupId>
+            <artifactId>argparse4j</artifactId>
+            <version>0.4.0</version>
+        </dependency>
+    </dependencies>
+    <repositories>
+         <repository>
+             <id>biojava-maven-repo</id>
+             <name>BioJava repository</name>
+             <url>http://www.biojava.org/download/maven/</url>
+        </repository>
+        <repository>
+            <id>argparse4j-maven-repo</id>
+            <name>argparse4j repository</name>
+            <url>https://github.com/tatsuhiro-t/argparse4j</url>
+        </repository>
+        <repository>
+            <id>paralelj-maven-repo</id>
+            <name>ParallelJ repository</name>
+            <url>http://repo1.maven.org/maven2/org/parallelj/parallelj/</url>
+        </repository>
+    </repositories>
+</project>
