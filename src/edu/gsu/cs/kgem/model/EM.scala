@@ -85,7 +85,7 @@ class EM(gens: List[Genotype], reads: List[Read]) {
     for (i <- gs) {
       freqs(i) = nfqs(i)
     }
-    println(change)
+    println("%f".format(change))
     change
   }
 }

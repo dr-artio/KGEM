@@ -37,7 +37,7 @@ object KGEM {
       val col = collupse.map(g => (g.toIntegralString, g)).toMap
       collupsed -= col.size
       collupse = col.values.toList
-      println("KGEM collupsed " + collupsed + " genotypes")
+      println("KGEM collupsed %d genotypes".format(collupsed))
     } while (collupsed > 0)
     collupse
   }
@@ -50,7 +50,7 @@ object KGEM {
       rounding(gens)
       runEM(gens)
       alleleFreqEstimation(gens)
-      println("KGEM iteration done in " + ((System.currentTimeMillis - st) * 1.0 / 60000) + " minutes")
+      println("KGEM iteration done in %.2f minutes".format(((System.currentTimeMillis - st) * 1.0 / 60000)))
     }
   }
 

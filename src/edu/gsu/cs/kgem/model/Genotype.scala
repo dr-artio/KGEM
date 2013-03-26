@@ -67,6 +67,15 @@ class Genotype(n: Int) {
     round
   }
 
+  /**
+   * Add read to the genotype, i. e. increase
+   * the the value on each position covered by
+   * read and corresponding nucleotide
+   * @param r
+   *          Read object with alignment information
+   *          and sequence.
+   */
+  @inline
   def addRead(r: Read) = {
     var s = r.beg
     r.seq foreach (c => {

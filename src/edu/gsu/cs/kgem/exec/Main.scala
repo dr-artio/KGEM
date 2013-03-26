@@ -35,12 +35,14 @@ object Main {
     var gens = seeds.map(s => new Genotype(s.seq)).toList
     KGEM.initReads(reads.toList)
     gens = KGEM.run(gens)
-    for (g <- gens) {
-      out.println(g.freq + "\n" + g.toIntegralString.replace("-", ""))
+    val gg = gens.map(g => (g.toIntegralString.replace("-", ""), g)).toMap
+    for (g <- gg) {
+      out.println(">read_freq=%.10f\n%s".format(g._2.freq, g._1))
     }
-    println("The whole procedure took " +
-      ((System.currentTimeMillis - s) * 0.0001 / 6) + " minutes\n" +
-      "Total number of haplotypes is " + gens.size + "\nbye bye")
+    println("gg size %d".format(gg.size))
+    println(("The whole procedure took %.2f minutes\n" +
+      "Total number of haplotypes is %d \nbye bye").format(
+        ((System.currentTimeMillis - s) * 0.0001 / 6),gens.size))
   }
 
   /**
@@ -126,29 +128,29 @@ object Main {
     var out = System.out
 
     parser.addArgument(READS_PARAMETER)
-      .metavar("ReadsFile")
+      .metavar("reads file")
       .help("File containing preprocessed sequencing data"
       + " file with extension (.txt) "
       + "reads in extended format")
       .`type`(classOf[File])
 
     parser.addArgument("-k").dest(K_PARAMETER)
-      .metavar("K")
-      .setDefault[Integer](k)
+      .metavar("sample size")
       .`type`(classOf[Integer])
       .help("Parameter k - the size of sample being randomly chosen "
       + "as seeds. Depends on expectation of variability expected "
       + "on exploring region Default: " + k + ")");
 
     parser.addArgument("-o", "-out").dest(OUTPUT_PARAMETER)
-      .metavar("O")
+      .metavar("output filename")
       .setDefault[PrintStream](out)
       .`type`(classOf[FileOutputStream])
       .help("Output file name. Default: system.out")
 
     try {
       val n = parser.parseArgs(args)
-      k = n.getInt(K_PARAMETER)
+      val kk = n.get(K_PARAMETER).asInstanceOf[Int]
+      k = if (kk > 1) kk else k
       fl = n.get(READS_PARAMETER).asInstanceOf[File]
       val outO = n.get(OUTPUT_PARAMETER)
       if (outO.isInstanceOf[FileOutputStream]) out = new PrintStream(outO.asInstanceOf[OutputStream])
