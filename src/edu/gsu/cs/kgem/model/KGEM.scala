@@ -1,6 +1,7 @@
 package edu.gsu.cs.kgem.model
 
 import collection.mutable
+import util.Random
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,6 +15,11 @@ object KGEM {
   private var zreads = reads.zipWithIndex
   private var em = new EM(List[Genotype](), List[Read]())
   var table = new mutable.MutableList[Map[String, List[(Read, Int)]]]()
+
+  def initSeeds(n: Int) = {
+    val seeds = sample(reads, k)
+    seeds.map(s => new Genotype(s.seq)).toList
+  }
 
   def initReads(reads: List[Read]) = {
     this.reads = reads
@@ -37,7 +43,7 @@ object KGEM {
       val col = collupse.map(g => (g.toIntegralString, g)).toMap
       collupsed -= col.size
       collupse = col.values.toList
-      println("KGEM collupsed %d genotypes".format(collupsed))
+      println("KGEM collapsed %d genotypes".format(collupsed))
     } while (collupsed > 0)
     collupse
   }
@@ -84,4 +90,37 @@ object KGEM {
     }
     g.convergen = prev.equals(g.toIntegralString)
   }
+
+  /**
+   * Method for choosing random sample of size @size from the
+   * collection of objects. Returns the whole list is @size
+   * is greater than size of the original collection.
+   * @param iter
+   *             Any iterable collection
+   * @param size
+   *             Size of the required sample
+   * @tparam T
+   *           Generic parameter (Class of objects in list)
+   * @return
+   *         List of randomly chosen elements from collection
+   *         of specified size @size
+   */
+  def sample[T](iter: Iterable[T], size: Int) = {
+    if (iter.size < size) iter.toList
+    var res = new mutable.MutableList[T]()
+    val rnd = new Random(System.currentTimeMillis)
+    var needed = size
+    var len = iter.size
+    val iterator = iter.iterator
+    while (needed > 0 && iterator.hasNext) {
+      val item = iterator.next
+      if (rnd.nextInt(len) < needed) {
+        res += item
+        needed -= 1
+      }
+      len -= 1
+    }
+    res
+  }
+
 }

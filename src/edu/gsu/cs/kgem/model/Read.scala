@@ -7,11 +7,11 @@ import net.sf.samtools.SAMRecord
  * User: aartyomenko
  * Date: 3/17/13
  * Time: 10:55 PM
- * To change this template use File | Settings | File Templates.
+ * Wrapper for Read
  */
 class Read(rc: SAMRecord) {
   var freq = 1.0
-  val beg = rc.getAlignmentStart
+  val beg = rc.getAlignmentStart - 1
   val seq = rc.getReadString
   val len = rc.getReadLength
   val end = beg + len
