@@ -16,14 +16,17 @@ object ArgumentParser {
   private val READS_PARAMETER = "reads"
   private val K_PARAMETER = "k"
   private val OUTPUT_PARAMETER = "out"
+  private val MCN_PARAMETER = "mcn"
+  private val MCM_PARAMETER = "mcm"
+  private val THRESHOLD_PARAMETER = "tr"
 
   /**
    * Method for parsing command line parameters
    * and handle mistakes in parameters list
    * @param args
-   *             Array of command line parameters
+   * Array of command line parameters
    * @return
-   *         Tuple of parsed and converted parameters
+   * Tuple of parsed and converted parameters
    */
   def parse(args: Array[String]) = {
     val parser = ArgumentParsers.newArgumentParser("KGEM")
@@ -32,6 +35,9 @@ object ArgumentParser {
     var k = 50
     var fl: File = null
     var out = System.out
+    var tr = 0.05
+    var mcn = 4
+    var mcm = 3
 
     parser.addArgument(READS_PARAMETER)
       .metavar("reads file")
@@ -53,6 +59,23 @@ object ArgumentParser {
       .`type`(classOf[FileOutputStream])
       .help("Output file name. (Default: stdout)")
 
+    parser.addArgument("-tr").dest(THRESHOLD_PARAMETER)
+      .metavar("threshold")
+      .`type`(classOf[Double])
+      .help("Threshold - the percentage level threshold. On each " +
+      "step genotypes with frequency below will be dropped (Default: " + tr + ")")
+
+    parser.addArgument("-mcn").dest(MCN_PARAMETER)
+      .metavar("n")
+      .`type`(classOf[Integer])
+      .help("Number of runs in Monte Carlo series (Default: " + mcn + ")")
+
+    parser.addArgument("-mcm").dest(MCM_PARAMETER)
+      .metavar("m")
+      .`type`(classOf[Integer])
+      .help("Minimum number of repeats for Monte Carlo experiment (Default: " + mcm + ")")
+
+
     try {
       val n = parser.parseArgs(args)
       val kk = n.get(K_PARAMETER).asInstanceOf[Int]
@@ -60,12 +83,26 @@ object ArgumentParser {
       fl = n.get(READS_PARAMETER).asInstanceOf[File]
       val outO = n.get(OUTPUT_PARAMETER)
       if (outO.isInstanceOf[FileOutputStream]) out = new PrintStream(outO.asInstanceOf[OutputStream])
+      val trtmp = n.get(THRESHOLD_PARAMETER)
+      if (trtmp != null) tr = trtmp.asInstanceOf[Double]
+      val mcnt = n.get(MCN_PARAMETER)
+      if (mcnt != null) mcn = mcnt.asInstanceOf[Int]
+      val mcmt = n.getInt(MCM_PARAMETER)
+      if (mcmt != null) mcm = mcmt.asInstanceOf[Int]
     } catch {
       case e: ArgumentParserException => {
         parser.handleError(e)
         System.exit(1)
       }
     }
-    (k, fl, out)
+    val message = ("Parameters:\n" +
+      "Number of runc in MC:               %d\n" +
+      "Minimum repeats to count:           %d\n" +
+      "Threshold (%s):                     %.2f\n" +
+      "Size of sample for seeds selection: %d\n" +
+      "Path of the input file: %s")
+    println(message.format(mcn, mcm, "%", tr, k, fl.getAbsolutePath))
+    tr *= 0.01
+    (k, mcn, mcm, tr, fl, out)
   }
 }

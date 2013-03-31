@@ -14,11 +14,12 @@ object KGEM {
   private var reads = List[Read]()
   private var zreads = reads.zipWithIndex
   private var em = new EM(List[Genotype](), List[Read]())
+  private var tr = 0.0005
   var table = new mutable.MutableList[Map[String, List[(Read, Int)]]]()
 
-  def initSeeds(n: Int) = {
-    val seeds = sample(reads, k)
-    seeds.map(s => new Genotype(s.seq)).toList
+  def initSeeds(n: Int): List[Genotype] = {
+    val seeds = sample(reads, n)
+    return seeds.map(s => new Genotype(s.seq)).toList
   }
 
   def initReads(reads: List[Read]) = {
@@ -35,20 +36,30 @@ object KGEM {
   }
 
   def run(gens: List[Genotype]) = {
-    var collupse = gens
-    var collupsed = gens.size
+    var collapse = gens
+    var collapsed = gens.size
     do {
-      collupsed = collupse.size
-      runKgem(collupse)
-      val col = collupse.map(g => (g.toIntegralString, g)).toMap
-      collupsed -= col.size
-      collupse = col.values.toList
-      println("KGEM collapsed %d genotypes".format(collupsed))
-    } while (collupsed > 0)
-    collupse
+      collapsed = collapse.size
+      runKgem(collapse)
+      val col = collapse.map(g => (g.toIntegralString, g)).toMap
+      collapse = col.values.toList
+      collapse = thresholdClean(collapse, tr)
+      collapsed -= collapse.size
+      println("KGEM collapsed %d genotypes".format(collapsed))
+    } while (collapsed > 0)
+    collapse
   }
 
-  def runKgem(gens: List[Genotype]) = {
+  def initThreshold(tr: Double) {
+    this.tr = tr
+  }
+
+  private def thresholdClean(gens: List[Genotype], tr: Double) = {
+    val cleaned = gens.filter(g => g.freq >= tr)
+    cleaned
+  }
+
+  private def runKgem(gens: List[Genotype]) = {
     for (g <- gens) g.convergen = false
 
     while (!gens.forall(g => g.convergen)) {
@@ -64,7 +75,7 @@ object KGEM {
     for (g <- gens) g.round
   }
 
-  private def runEM(gens: List[Genotype]) = {
+  def runEM(gens: List[Genotype]) = {
     em = new EM(gens, reads)
     em.run
   }
@@ -96,16 +107,16 @@ object KGEM {
    * collection of objects. Returns the whole list is @size
    * is greater than size of the original collection.
    * @param iter
-   *             Any iterable collection
+   * Any iterable collection
    * @param size
-   *             Size of the required sample
+   * Size of the required sample
    * @tparam T
-   *           Generic parameter (Class of objects in list)
+   * Generic parameter (Class of objects in list)
    * @return
-   *         List of randomly chosen elements from collection
-   *         of specified size @size
+   * List of randomly chosen elements from collection
+   * of specified size @size
    */
-  def sample[T](iter: Iterable[T], size: Int) = {
+  private def sample[T](iter: Iterable[T], size: Int) = {
     if (iter.size < size) iter.toList
     var res = new mutable.MutableList[T]()
     val rnd = new Random(System.currentTimeMillis)

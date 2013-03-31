@@ -1,7 +1,7 @@
 package edu.gsu.cs.kgem.io
 
 import java.io.File
-import net.sf.samtools.{CigarOperator, CigarElement, SAMFileReader, SAMRecord}
+import net.sf.samtools.{CigarElement, SAMFileReader, SAMRecord}
 import collection.mutable
 import collection.JavaConversions._
 
@@ -46,11 +46,10 @@ object SAMParser {
     if (cutStr.length >= l)
       return cutStr
     else
-      while (ll < l){
+      while (ll < l) {
         ll += 1
         sb.append("-")
       }
-
     sb.toString
   }
 

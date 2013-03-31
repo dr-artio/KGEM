@@ -1,8 +1,9 @@
 package edu.gsu.cs.kgem.exec
 
-import edu.gsu.cs.kgem.model.KGEM.{initReads, initSeeds, run}
+import edu.gsu.cs.kgem.model.KGEM.{initReads, initThreshold}
 import edu.gsu.cs.kgem.io.ArgumentParser
 import edu.gsu.cs.kgem.io.OutputHandler.outputResult
+import edu.gsu.cs.kgem.model.MonteCarloWrapper.run
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,15 +15,16 @@ import edu.gsu.cs.kgem.io.OutputHandler.outputResult
  */
 object Main {
   def main(args: Array[String]) {
-    val (k, fl, out) = ArgumentParser.parse(args)
-
+    val (k, mcn, mcm, tr, fl, out) = ArgumentParser.parse(args)
     val s = System.currentTimeMillis
 
-    val reads = if (fl.getName.endsWith(".sam")) initSAMReads(fl)
-                                else initTXTReads(fl)
-    var gens = initSeeds(k)
+    val reads = if (fl.getName.toLowerCase.endsWith(".sam")) initSAMReads(fl)
+    else initTXTReads(fl)
     initReads(reads.toList)
-    gens = run(gens)
+    initThreshold(tr)
+
+    val gens = run(k, mcn, mcm)
+
     outputResult(out, gens, s)
   }
 }

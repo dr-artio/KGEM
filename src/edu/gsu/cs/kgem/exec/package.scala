@@ -3,7 +3,6 @@ package edu.gsu.cs.kgem
 import collection.mutable
 import io.SAMParser
 import model.Read
-import util.Random
 import java.io.File
 import scala.io.Source._
 import net.sf.samtools.{SAMFileHeader, SAMRecord}
@@ -21,9 +20,9 @@ package object exec {
    * Read SAM file and fold according to extended
    * sequences.
    * @param fl
-   *           SAM file
+   * SAM file
    * @return
-   *         Iterable collection of Reads
+   * Iterable collection of Reads
    */
   def initSAMReads(fl: File): Iterable[Read] = {
     val samRecords = SAMParser.readSAMFile(fl)
@@ -41,9 +40,9 @@ package object exec {
    * Old method for parsing read strings. Do not use
    * without external parser.
    * @param fl
-   *           File wit extended reads in extended format
+   * File wit extended reads in extended format
    * @return
-   *         Iterable collection of reads
+   * Iterable collection of reads
    */
   @deprecated
   def initTXTReads(fl: File): Iterable[Read] = {
@@ -58,9 +57,9 @@ package object exec {
   /**
    * Init read frequencies according to counter map
    * @param reads
-   *              Collection of reads
+   * Collection of reads
    * @param readsMap
-   *                 Counter Map
+   * Counter Map
    */
   private def initReadFreqs(reads: Iterable[Read], readsMap: mutable.Map[String, Int]) {
     reads foreach (r => {
@@ -71,9 +70,9 @@ package object exec {
   /**
    * Cover SAMRecords into Read objects
    * @param sams
-   *             Collection of SAMRecords
+   * Collection of SAMRecords
    * @return
-   *         Collection of reads
+   * Collection of reads
    */
   private def toReads(sams: Iterable[SAMRecord]) = {
     for (sam <- sams) yield new Read(sam)
@@ -83,9 +82,9 @@ package object exec {
    * Cover Map Entries with string and SAMRecord
    * into Read objects
    * @param sams
-   *             Map with strings and SAMRecords
+   * Map with strings and SAMRecords
    * @return
-   *         Collection of Reads
+   * Collection of Reads
    */
   private def toReads(sams: Map[String, SAMRecord]) = {
     for (e <- sams) yield {
@@ -99,9 +98,9 @@ package object exec {
    * Converts list of Strings into counter map:
    * i. e. (A,A,B,C,C,C) -> ({A:2},{B,1},{C:3})
    * @param lines
-   *              Iterable collection of strings
+   * Iterable collection of strings
    * @return
-   *         Map with counts of strings
+   * Map with counts of strings
    */
   private def toCounterMap(lines: Iterator[String]): mutable.Map[String, Int] = {
     val readsMap = mutable.Map[String, Int]()
@@ -118,9 +117,9 @@ package object exec {
   /**
    * Deserialize SAMRecords from strings
    * @param reads
-   *              Reads in strings
+   * Reads in strings
    * @return
-   *         SAMRecords collection
+   * SAMRecords collection
    */
   @deprecated
   private def toSAMRecords(reads: Iterable[String]) = {

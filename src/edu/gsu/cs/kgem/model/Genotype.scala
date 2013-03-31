@@ -41,7 +41,6 @@ object Genotype {
   def nameForCompound(n: NucleotideCompound) = nuclMap(n)
 }
 
-
 import Genotype._
 
 class Genotype(n: Int) {
@@ -72,8 +71,8 @@ class Genotype(n: Int) {
    * the the value on each position covered by
    * read and corresponding nucleotide
    * @param r
-   *          Read object with alignment information
-   *          and sequence.
+   * Read object with alignment information
+   * and sequence.
    */
   @inline
   def addRead(r: Read) = {
@@ -87,7 +86,7 @@ class Genotype(n: Int) {
   def sqNormalize = {
     normalize
     data foreach (m => {
-      val s = m.values.map(v => v*v).sum
+      val s = m.values.map(v => v * v).sum
       if (s != 0) m foreach (e => m(e._1) /= s)
     })
   }

@@ -7,7 +7,7 @@ package edu.gsu.cs.kgem.model
  * Date: 3/17/13
  * Time: 8:24 PM
  * Object for performing Expectation Maximization (EM)
- * estimation for predescribed model.
+ * estimation for prescribed model.
  */
 class EM(gens: List[Genotype], reads: List[Read]) {
   val rs = (0 until reads.size)
@@ -28,10 +28,10 @@ class EM(gens: List[Genotype], reads: List[Read]) {
   }
 
   /**
-   * Initialize h_rs in two dimentional griid of
+   * Initialize h_rs in two dimensional grid of
    * values.
    * @return
-   *         Two dim array with h_rs
+   * Two dim array with h_rs
    */
   private def initHrs: Array[Array[Double]] = {
     val hrs = Array.fill[Double](gens.size, reads.size) {
@@ -74,8 +74,8 @@ class EM(gens: List[Genotype], reads: List[Read]) {
    * Expectation step.
    * For each pair r and q p_qr=f_q*h_qr / (sum_qi_r(f_qi*h_qir))
    * @return
-   *         p_qrs probabilities of emmiting read by corresponding
-   *         genotype
+   * p_qrs probabilities of emitting read by corresponding
+   * genotype
    */
   def eStep = {
     val pqrs = Array.ofDim[Double](gens.size, reads.size)
@@ -99,10 +99,10 @@ class EM(gens: List[Genotype], reads: List[Read]) {
    * Maximization step.
    * For each qsps f_q=sum_q_ri(p_q_ri*f_ri) / sum_rj(f_rj)
    * @param pqrs
-   *             p_qrs probabilities of emmiting read by corresponding
-   *             genotype
+   * p_qrs probabilities of emitting read by corresponding
+   * genotype
    * @return
-   *         Max change of frequency.
+   * Max change of frequency.
    */
   def mStep(pqrs: Array[Array[Double]]): Double = {
     val nfqs = Array.tabulate[Double](gens.size)((i) => {
