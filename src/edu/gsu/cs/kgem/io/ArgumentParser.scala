@@ -61,7 +61,7 @@ object ArgumentParser {
 
     parser.addArgument("-tr").dest(THRESHOLD_PARAMETER)
       .metavar("threshold")
-      .`type`(classOf[Double])
+      .`type`(classOf[java.lang.Double])
       .help("Threshold - the percentage level threshold. On each " +
       "step genotypes with frequency below will be dropped (Default: " + tr + ")")
 
