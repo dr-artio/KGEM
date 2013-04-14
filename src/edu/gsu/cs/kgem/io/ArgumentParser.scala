@@ -23,12 +23,13 @@ object ArgumentParser {
   /**
    * Method for parsing command line parameters
    * and handle mistakes in parameters list
+   * (Monte Carlo version)
    * @param args
    * Array of command line parameters
    * @return
    * Tuple of parsed and converted parameters
    */
-  def parse(args: Array[String]) = {
+  def parseMC(args: Array[String]) = {
     val parser = ArgumentParsers.newArgumentParser("KGEM")
       .description("Error correction based on KGEM.")
 
@@ -98,11 +99,79 @@ object ArgumentParser {
     val message = ("Parameters:\n" +
       "Number of runc in MC:               %d\n" +
       "Minimum repeats to count:           %d\n" +
-      "Threshold (%s):                     %.2f\n" +
+      "Threshold (%s):                      %.2f\n" +
       "Size of sample for seeds selection: %d\n" +
       "Path of the input file: %s")
     println(message.format(mcn, mcm, "%", tr, k, fl.getAbsolutePath))
     tr *= 0.01
     (k, mcn, mcm, tr, fl, out)
+  }
+
+  /**
+   * Method for parsing command line parameters
+   * and handle mistakes in parameters list
+   * (Max Hamming Distance version)
+   * @param args
+   * Array of command line parameters
+   * @return
+   * Tuple of parsed and converted parameters
+   */
+  def parseMaxHD(args: Array[String]) = {
+    val parser = ArgumentParsers.newArgumentParser("KGEM")
+      .description("Error correction based on KGEM.")
+
+    var k = 50
+    var fl: File = null
+    var out = System.out
+    var tr = 3
+
+    parser.addArgument(READS_PARAMETER)
+      .metavar("reads file")
+      .help("File containing preprocessed sequencing data"
+      + " file with extension (.txt) or (.sam) "
+      + "reads in extended format")
+      .`type`(classOf[File])
+
+    parser.addArgument("-k").dest(K_PARAMETER)
+      .metavar("sample size")
+      .`type`(classOf[Integer])
+      .help("Parameter k - the size of sample being randomly chosen "
+      + "as seeds. Depends on expectation of variability expected "
+      + "on exploring region (Default: " + k + ")")
+
+    parser.addArgument("-o", "-out").dest(OUTPUT_PARAMETER)
+      .metavar("output filename")
+      .setDefault[PrintStream](out)
+      .`type`(classOf[FileOutputStream])
+      .help("Output file name. (Default: stdout)")
+
+    parser.addArgument("-tr", "--threshold").dest(THRESHOLD_PARAMETER)
+      .metavar("threshold")
+      .`type`(classOf[Integer])
+      .help("Threshold - min Hamming distance between " +
+      "seeds for init stage. (Default: " + tr + ")")
+
+
+    try {
+      val n = parser.parseArgs(args)
+      val kk = n.get(K_PARAMETER).asInstanceOf[Int]
+      k = if (kk > 1) kk else k
+      fl = n.get(READS_PARAMETER).asInstanceOf[File]
+      val outO = n.get(OUTPUT_PARAMETER)
+      if (outO.isInstanceOf[FileOutputStream]) out = new PrintStream(outO.asInstanceOf[OutputStream])
+      val trtmp = n.get(THRESHOLD_PARAMETER)
+      if (trtmp != null) tr = trtmp.asInstanceOf[Int]
+    } catch {
+      case e: ArgumentParserException => {
+        parser.handleError(e)
+        System.exit(1)
+      }
+    }
+    val message = ("Parameters:\n" +
+      "Threshold:                                  %d\n" +
+      "Maximal size of sample for seeds selection: %d\n" +
+      "Path of the input file: %s")
+    println(message.format(tr, k, fl.getAbsolutePath))
+    (k, tr, fl, out)
   }
 }

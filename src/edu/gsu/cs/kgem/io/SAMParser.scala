@@ -27,7 +27,7 @@ object SAMParser {
     var index = 0
     val str = sam.getReadString
     val cs = sam.getCigar.getCigarElements
-    for (i <- 0 until sam.getAlignmentStart)
+    for (i <- 0 until sam.getAlignmentStart - 1)
       sb.append("-")
     for (cigar: CigarElement <- cs) {
       if (!cigar.getOperator.consumesReadBases) {

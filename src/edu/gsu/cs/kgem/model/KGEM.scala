@@ -61,13 +61,14 @@ object KGEM {
 
   private def runKgem(gens: List[Genotype]) = {
     for (g <- gens) g.convergen = false
-
-    while (!gens.forall(g => g.convergen)) {
+    var i = 1
+    while (!gens.forall(g => g.convergen) && i <= 5) {
       val st = System.currentTimeMillis
       rounding(gens)
       runEM(gens)
       alleleFreqEstimation(gens)
-      println("KGEM iteration done in %.2f minutes".format(((System.currentTimeMillis - st) * 1.0 / 60000)))
+      println("KGEM iteration #%d done in %.2f minutes".format(i, ((System.currentTimeMillis - st) * 1.0 / 60000)))
+      i += 1
     }
   }
 

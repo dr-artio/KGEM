@@ -1,9 +1,9 @@
 package edu.gsu.cs.kgem.exec
 
-import edu.gsu.cs.kgem.model.KGEM.{initReads, initThreshold}
+import edu.gsu.cs.kgem.model.KGEM.initReads
 import edu.gsu.cs.kgem.io.ArgumentParser
 import edu.gsu.cs.kgem.io.OutputHandler.outputResult
-import edu.gsu.cs.kgem.model.MonteCarloWrapper.run
+import edu.gsu.cs.kgem.model.MaxDistanceWrapper.run
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,16 +15,33 @@ import edu.gsu.cs.kgem.model.MonteCarloWrapper.run
  */
 object Main {
   def main(args: Array[String]) {
-    val (k, mcn, mcm, tr, fl, out) = ArgumentParser.parse(args)
+    runMaxHD(args)
+  }
+
+  private def runMaxHD(args: Array[String]) {
+    val (k, tr, fl, out) = ArgumentParser.parseMaxHD(args)
     val s = System.currentTimeMillis
 
     val reads = if (fl.getName.toLowerCase.endsWith(".sam")) initSAMReads(fl)
     else initTXTReads(fl)
     initReads(reads.toList)
-    initThreshold(tr)
 
-    val gens = run(k, mcn, mcm)
+    val gens = run(reads.toList, k, tr)
 
     outputResult(out, gens, s)
+  }
+
+  private def runMC(args: Array[String]) {
+    val (k, mcn, mcm, tr, fl, out) = ArgumentParser.parseMC(args)
+    val s = System.currentTimeMillis
+
+    val reads = if (fl.getName.toLowerCase.endsWith(".sam")) initSAMReads(fl)
+    else initTXTReads(fl)
+    initReads(reads.toList)
+    //initThreshold(tr)
+
+    //val gens = run(k, mcn, mcm)
+
+    //outputResult(out, gens, s)
   }
 }

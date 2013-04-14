@@ -12,7 +12,7 @@ package edu.gsu.cs.kgem.model
 class EM(gens: List[Genotype], reads: List[Read]) {
   val rs = (0 until reads.size)
   val gs = (0 until gens.size)
-  val eps = 0.005
+  val eps = 0.0025
 
   var h_rs = initHrs
   var freqs = Array.fill(gens.size) {
@@ -48,10 +48,12 @@ class EM(gens: List[Genotype], reads: List[Read]) {
       var i = 0
       while (i < lm) {
         for (c <- KGEM.table(i)) {
-          val multiplier = gen.data(i)(c._1)
-          for (r <- c._2) {
-            val j = r._2
-            hrs(g)(j) *= multiplier
+          if (!"-".equals(c._1)) {
+            val multiplier = gen.data(i)(c._1)
+            for (r <- c._2) {
+              val j = r._2
+              hrs(g)(j) *= multiplier
+            }
           }
         }
         i += 1
