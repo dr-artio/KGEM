@@ -1,19 +1,25 @@
 This file was created by IntelliJ IDEA 12.0.4 for binding GitHub repository
 
-KGEM (Top down approach) v.0.10
+KGEM (Top down approach) v0.20
 Basic functionality:
 
 Read file with aligned reads (.sam).
 Initialize population as random sample of fixed size from this reads.
 
-Consequently repeat KGEM steps until convergence:
+Sequentially repeat KGEM steps until convergence:
     1. Rounding
     2. Frequency estimation (FEM)
     3. Allele frequency estimation (KGEM)
 
 Output corrected haplotypes in fasta format.
 --------
-New features v0.10:
+New features v0.20
+- KGEM derandomized with maximization of hamming distance between seeds
+- Monte Carlo parameters dropped.
+- Threshold changed to min hamming distance between seeds
+- Loop overflow condition added (get rid of infinite loops)
+
+features v0.10:
 - KGEM steps include threshold clean step:
     Drop all genotypes with frequency less than threshold level (Default 0.05%)
 
