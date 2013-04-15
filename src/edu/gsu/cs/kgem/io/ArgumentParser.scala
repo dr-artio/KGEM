@@ -41,27 +41,27 @@ object ArgumentParser {
     var mcm = 3
 
     parser.addArgument(READS_PARAMETER)
-      .metavar("reads file")
+      .metavar("ReadsFile")
       .help("File containing preprocessed sequencing data"
       + " file with extension (.txt) or (.sam) "
       + "reads in extended format")
       .`type`(classOf[File])
 
     parser.addArgument("-k").dest(K_PARAMETER)
-      .metavar("sample size")
+      .metavar("SampleSize")
       .`type`(classOf[Integer])
       .help("Parameter k - the size of sample being randomly chosen "
       + "as seeds. Depends on expectation of variability expected "
       + "on exploring region (Default: " + k + ")")
 
-    parser.addArgument("-o", "-out").dest(OUTPUT_PARAMETER)
-      .metavar("output filename")
+    parser.addArgument("-o", "--out").dest(OUTPUT_PARAMETER)
+      .metavar("Output")
       .setDefault[PrintStream](out)
       .`type`(classOf[FileOutputStream])
       .help("Output file name. (Default: stdout)")
 
     parser.addArgument("-tr").dest(THRESHOLD_PARAMETER)
-      .metavar("threshold")
+      .metavar("Threshold")
       .`type`(classOf[java.lang.Double])
       .help("Threshold - the percentage level threshold. On each " +
       "step genotypes with frequency below will be dropped (Default: " + tr + ")")
@@ -126,27 +126,27 @@ object ArgumentParser {
     var tr = 3
 
     parser.addArgument(READS_PARAMETER)
-      .metavar("reads file")
+      .metavar("ReadsFile")
       .help("File containing preprocessed sequencing data"
       + " file with extension (.txt) or (.sam) "
       + "reads in extended format")
       .`type`(classOf[File])
 
     parser.addArgument("-k").dest(K_PARAMETER)
-      .metavar("sample size")
+      .metavar("SampleSize")
       .`type`(classOf[Integer])
       .help("Parameter k - the size of sample being randomly chosen "
       + "as seeds. Depends on expectation of variability expected "
       + "on exploring region (Default: " + k + ")")
 
-    parser.addArgument("-o", "-out").dest(OUTPUT_PARAMETER)
-      .metavar("output filename")
+    parser.addArgument("-o", "--out").dest(OUTPUT_PARAMETER)
+      .metavar("Output")
       .setDefault[PrintStream](out)
       .`type`(classOf[FileOutputStream])
       .help("Output file name. (Default: stdout)")
 
     parser.addArgument("-tr", "--threshold").dest(THRESHOLD_PARAMETER)
-      .metavar("threshold")
+      .metavar("Threshold")
       .`type`(classOf[Integer])
       .help("Threshold - min Hamming distance between " +
       "seeds for init stage. (Default: " + tr + ")")
