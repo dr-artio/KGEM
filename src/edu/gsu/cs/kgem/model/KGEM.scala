@@ -84,7 +84,7 @@ object KGEM {
 
   private def alleleFreqEstimation(gens: List[Genotype]) = {
     val pqrs = em.eStep
-    for (g <- gens.zipWithIndex) doAlleleFreqEstimation(g._1, pqrs(g._2))
+    for (g <- gens.zipWithIndex.par) doAlleleFreqEstimation(g._1, pqrs(g._2))
   }
 
   private def doAlleleFreqEstimation(g: Genotype, pqs: Array[Double]): Unit = {
