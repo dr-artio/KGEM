@@ -23,12 +23,12 @@ object Main {
     val s = System.currentTimeMillis
 
     val reads = if (fl.getName.toLowerCase.endsWith(".sam")) initSAMReads(fl)
-    else initTXTReads(fl)
+    else initFastaReads(fl)
     initReads(reads.toList)
 
     val gens = run(reads.toList, k, tr)
 
-    outputResult(out, gens, s)
+    outputResult(out, gens, s, reads.size)
   }
 
   private def runMC(args: Array[String]) {
@@ -36,7 +36,7 @@ object Main {
     val s = System.currentTimeMillis
 
     val reads = if (fl.getName.toLowerCase.endsWith(".sam")) initSAMReads(fl)
-    else initTXTReads(fl)
+    else initFastaReads(fl)
     initReads(reads.toList)
     //initThreshold(tr)
 

@@ -90,7 +90,7 @@ object KGEM {
   private def doAlleleFreqEstimation(g: Genotype, pqs: Array[Double]): Unit = {
     if (g.convergen) return
     val prev = g.toIntegralString
-    for (e <- g.data.zipWithIndex) {
+    for (e <- g.data.zipWithIndex.par) {
       for (v <- e._1.keys) e._1(v) = 0
       val idx = e._2
       val rs = table(idx)

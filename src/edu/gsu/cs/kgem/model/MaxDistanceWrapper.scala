@@ -58,7 +58,7 @@ object MaxDistanceWrapper {
       if (cur._2 < threshold) return seeds
       seeds += cur._1
       distanceMap = distanceMap.map(e => (e._1, min(e._2, hammingDistance(cur._1, e._1)))) //.filter(e => (e._2 >= threshold))
-      println("Current size of DistnceMap: %d".format(distanceMap.size))
+      //println("Current size of DistnceMap: %d".format(distanceMap.size))
       //distanceMap = readArr.filter(r => !seeds.contains(r)).map(r => (r, seeds.map(s => hammingDistance(s, r)).min)).toMap
     }
     seeds

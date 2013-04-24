@@ -4,8 +4,9 @@ import collection.mutable
 import io.SAMParser
 import model.Read
 import java.io.File
-import scala.io.Source._
 import net.sf.samtools.{SAMFileHeader, SAMRecord}
+import org.biojava3.core.sequence.io.FastaReaderHelper.readFastaDNASequence
+import collection.JavaConversions._
 
 /**
  * Created with IntelliJ IDEA.
@@ -40,13 +41,13 @@ package object exec {
    * Old method for parsing read strings. Do not use
    * without external parser.
    * @param fl
-   * File wit extended reads in extended format
+   * File with aligned reads fasta format
    * @return
    * Iterable collection of reads
    */
-  @deprecated
-  def initTXTReads(fl: File): Iterable[Read] = {
-    val lines = fromFile(fl).getLines
+  def initFastaReads(fl: File): Iterable[Read] = {
+    val seqs = readFastaDNASequence(fl)
+    val lines = seqs.values.map(s => s.toString).iterator
     val readsMap = toCounterMap(lines)
     val samRecords = toSAMRecords(readsMap.keys)
     val reads = toReads(samRecords)
