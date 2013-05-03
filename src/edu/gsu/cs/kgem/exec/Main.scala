@@ -28,8 +28,8 @@ object Main {
 
     val gens = run(reads.toList, k, tr)
 
-    outputResult(out, gens, s, reads.size)
     outputHaplotypes(outh, gens)
+    outputResult(out, gens, s, reads.size)
   }
 
   private def runMC(args: Array[String]) {

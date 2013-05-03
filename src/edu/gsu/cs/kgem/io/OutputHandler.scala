@@ -65,7 +65,8 @@ object OutputHandler {
     val gg = gens.map(g => (g.toIntegralString, g)).toMap
     var i = 1
     for (g <- gg) {
-        outh.println(">read%d_freq_%.10f\n%s".format(i += 1, g._2.freq, g._1))
+      outh.println(">read%d_freq_%.10f\n%s".format(i, g._2.freq, g._1))
+      i+=1
     }
   }
 }
