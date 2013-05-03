@@ -2,7 +2,7 @@ package edu.gsu.cs.kgem.exec
 
 import edu.gsu.cs.kgem.model.KGEM.initReads
 import edu.gsu.cs.kgem.io.ArgumentParser
-import edu.gsu.cs.kgem.io.OutputHandler.outputResult
+import edu.gsu.cs.kgem.io.OutputHandler.{outputResult, outputHaplotypes}
 import edu.gsu.cs.kgem.model.MaxDistanceWrapper.run
 
 /**
@@ -19,7 +19,7 @@ object Main {
   }
 
   private def runMaxHD(args: Array[String]) {
-    val (k, tr, fl, out) = ArgumentParser.parseMaxHD(args)
+    val (k, tr, fl, out, outh) = ArgumentParser.parseMaxHD(args)
     val s = System.currentTimeMillis
 
     val reads = if (fl.getName.toLowerCase.endsWith(".sam")) initSAMReads(fl)
@@ -29,6 +29,7 @@ object Main {
     val gens = run(reads.toList, k, tr)
 
     outputResult(out, gens, s, reads.size)
+    outputHaplotypes(outh, gens)
   }
 
   private def runMC(args: Array[String]) {

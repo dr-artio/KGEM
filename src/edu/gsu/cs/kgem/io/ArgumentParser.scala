@@ -19,6 +19,7 @@ object ArgumentParser {
   private val MCN_PARAMETER = "mcn"
   private val MCM_PARAMETER = "mcm"
   private val THRESHOLD_PARAMETER = "tr"
+  private val OUTPUT_HAPLOTYPES_PARAMETER = "outh";
 
   /**
    * Method for parsing command line parameters
@@ -29,6 +30,7 @@ object ArgumentParser {
    * @return
    * Tuple of parsed and converted parameters
    */
+  @deprecated
   def parseMC(args: Array[String]) = {
     val parser = ArgumentParsers.newArgumentParser("KGEM")
       .description("Error correction based on KGEM.")
@@ -123,6 +125,7 @@ object ArgumentParser {
     var k = 50
     var fl: File = null
     var out = System.out
+    var outh = System.out
     var tr = 3
 
     parser.addArgument(READS_PARAMETER)
@@ -151,6 +154,11 @@ object ArgumentParser {
       .help("Threshold - min Hamming distance between " +
       "seeds for init stage. (Default: " + tr + ")")
 
+    parser.addArgument("-oh", "--outh").dest(OUTPUT_HAPLOTYPES_PARAMETER)
+      .metavar("Output_hapls")
+      .`type`(classOf[FileOutputStream])
+      .help("Output file name for haplotypes. (Default: stdout)")
+
 
     try {
       val n = parser.parseArgs(args)
@@ -159,6 +167,8 @@ object ArgumentParser {
       fl = n.get(READS_PARAMETER).asInstanceOf[File]
       val outO = n.get(OUTPUT_PARAMETER)
       if (outO.isInstanceOf[FileOutputStream]) out = new PrintStream(outO.asInstanceOf[OutputStream])
+      val outH = n.get(OUTPUT_HAPLOTYPES_PARAMETER)
+      if (outH.isInstanceOf[FileOutputStream]) outh = new PrintStream(outH.asInstanceOf[OutputStream])
       val trtmp = n.get(THRESHOLD_PARAMETER)
       if (trtmp != null) tr = trtmp.asInstanceOf[Int]
     } catch {
@@ -172,6 +182,6 @@ object ArgumentParser {
       "Maximal size of sample for seeds selection: %d\n" +
       "Path of the input file: %s")
     println(message.format(tr, k, fl.getAbsolutePath))
-    (k, tr, fl, out)
+    (k, tr, fl, out, outh)
   }
 }

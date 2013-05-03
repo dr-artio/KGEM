@@ -11,6 +11,15 @@ import java.io.PrintStream
  * To change this template use File | Settings | File Templates.
  */
 object OutputHandler {
+  /**
+   * Output corrected reads into specified {@see PrintStream}
+   * @param out
+   *            {@see PrintStream} object, either file or stdout
+   * @param gens
+   *             Collection of haplotypes (Result)
+   * @param s
+   *          Timer value
+   */
   def outputResult(out: PrintStream, gens: List[Genotype], s: Long) = {
     val gg = gens.map(g => (g.toIntegralString, g)).toMap
     for (g <- gg) {
@@ -22,6 +31,17 @@ object OutputHandler {
       ((System.currentTimeMillis - s) * 0.0001 / 6), gens.size))
   }
 
+  /**
+   * Output corrected reads into specified {@see PrintStream}
+   * @param out
+   *            {@see PrintStream} object, either file or stdout
+   * @param gens
+   *             Collection of haplotypes (Result)
+   * @param s
+   *          Timer value
+   * @param n
+   *          Number of reads
+   */
   def outputResult(out: PrintStream, gens: List[Genotype], s: Long, n: Int) = {
     val gg = gens.map(g => (g.toIntegralString, g)).toMap
     for (g <- gg) {
@@ -32,5 +52,20 @@ object OutputHandler {
     println(("The whole procedure took %.2f minutes\n" +
       "Total number of haplotypes is %d \nbye bye").format(
       ((System.currentTimeMillis - s) * 0.0001 / 6), gens.size))
+  }
+
+  /**
+   * Output haplotypes into specified {@see PrintStream}
+   * @param outh
+   *            {@see PrintStream} object, either file or stdout
+   * @param gens
+   *             Collection of haplotypes (Result)
+   */
+  def outputHaplotypes(outh: PrintStream, gens: List[Genotype]) = {
+    val gg = gens.map(g => (g.toIntegralString, g)).toMap
+    var i = 1
+    for (g <- gg) {
+        outh.println(">read%d_freq_%.10f\n%s".format(i += 1, g._2.freq, g._1))
+    }
   }
 }
