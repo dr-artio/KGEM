@@ -19,7 +19,8 @@ object ArgumentParser {
   private val MCN_PARAMETER = "mcn"
   private val MCM_PARAMETER = "mcm"
   private val THRESHOLD_PARAMETER = "tr"
-  private val OUTPUT_HAPLOTYPES_PARAMETER = "outh";
+  private val OUTPUT_HAPLOTYPES_PARAMETER = "outh"
+  private val CONSENSUS_PARAMETER = "consensus"
 
   /**
    * Method for parsing command line parameters
@@ -127,12 +128,19 @@ object ArgumentParser {
     var out = System.out
     var outh = System.out
     var tr = 3
+    var cfl: File = null
 
     parser.addArgument(READS_PARAMETER)
       .metavar("ReadsFile")
       .help("File containing preprocessed sequencing data"
       + " file with extension (.txt) or (.sam) "
       + "reads in extended format")
+      .`type`(classOf[File])
+
+    parser.addArgument("-g").dest(CONSENSUS_PARAMETER)
+      .metavar("ConsensusFile")
+      .help("File containing consensus sequence"
+      + " file in fasta format")
       .`type`(classOf[File])
 
     parser.addArgument("-k").dest(K_PARAMETER)
@@ -165,6 +173,7 @@ object ArgumentParser {
       val kk = n.get(K_PARAMETER).asInstanceOf[Int]
       k = if (kk > 1) kk else k
       fl = n.get(READS_PARAMETER).asInstanceOf[File]
+      cfl = n.get(CONSENSUS_PARAMETER).asInstanceOf[File]
       val outO = n.get(OUTPUT_PARAMETER)
       if (outO.isInstanceOf[FileOutputStream]) out = new PrintStream(outO.asInstanceOf[OutputStream])
       val outH = n.get(OUTPUT_HAPLOTYPES_PARAMETER)
@@ -182,6 +191,6 @@ object ArgumentParser {
       "Maximal size of sample for seeds selection: %d\n" +
       "Path of the input file: %s")
     println(message.format(tr, k, fl.getAbsolutePath))
-    (k, tr, fl, out, outh)
+    (k, tr, fl, cfl, out, outh)
   }
 }

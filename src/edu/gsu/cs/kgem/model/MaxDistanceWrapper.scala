@@ -18,14 +18,33 @@ object MaxDistanceWrapper {
    * @param reads
    * Collection of reads
    * @param k
-   * Maximal size of population
+   * Maximum size of population
    * @param threshold
    * Min hamming distance between seeds
    * @return
    * Collection of genotypes (haplotypes)
    */
   def run(reads: Iterable[Read], k: Int, threshold: Int) = {
-    val gens = initSeeds(reads, k, threshold).map(r => new Genotype(r.seq))
+    val gens = initSeeds(reads, k, threshold, null).map(r => new Genotype(r.seq))
+    println("Initialization gave %d seeds in the population(Threshold: %d, k: %d)".format(gens.size, threshold, k))
+    KGEM.run(gens.toList)
+  }
+
+  /**
+   * Run KGEM procedure for the reads and consensus as first seed
+   * @param reads
+   * Collection of reads
+   * @param k
+   * Maximum size of population
+   * @param threshold
+   * Min hamming distance between seeds
+   * @param consensus
+   * Consensus wrapped into Read object
+   * @return
+   * Collection of genotypes (haplotypes)
+   */
+  def run(reads: Iterable[Read], k: Int, threshold: Int, seeds: Iterable[Read]) = {
+    val gens = initSeeds(reads, k, threshold, seeds).map(r => new Genotype(r.seq))
     println("Initialization gave %d seeds in the population(Threshold: %d, k: %d)".format(gens.size, threshold, k))
     KGEM.run(gens.toList)
   }
@@ -43,11 +62,14 @@ object MaxDistanceWrapper {
    * Min hamming distance between seeds
    * @return
    */
-  private def initSeeds(reads: Iterable[Read], k: Int, threshold: Int): mutable.MutableList[Read] = {
-    val s = reads.size
-    val rnd = new Random()
+  private def initSeeds(reads: Iterable[Read], k: Int, threshold: Int, candidates: Iterable[Read]): mutable.MutableList[Read] = {
+    if (candidates != null) {
+      val seeds = new mutable.MutableList[Read]()
+      for (c <- candidates) seeds += c
+      return seeds
+    }
     val readArr = reads.toArray
-    val first = readArr(rnd.nextInt(s))
+    val first = getFirstSeed(readArr)
     var seeds = new mutable.MutableList[Read]()
     seeds += first
     var distanceMap = readArr.filter(r => !r.equals(first)).map(r => (r, hammingDistance(first, r)))
@@ -61,7 +83,20 @@ object MaxDistanceWrapper {
       //println("Current size of DistnceMap: %d".format(distanceMap.size))
       //distanceMap = readArr.filter(r => !seeds.contains(r)).map(r => (r, seeds.map(s => hammingDistance(s, r)).min)).toMap
     }
-    seeds
+    return seeds
+  }
+
+  /**
+   * Select first read randomly
+   * @param readArr
+   * Array with all reads
+   * @return
+   * one read
+   */
+  private def getFirstSeed(readArr: Array[Read]) = {
+    val s = readArr.size
+    val rnd = new Random()
+    readArr(rnd.nextInt(s))
   }
 
   @inline
@@ -106,7 +141,7 @@ object MaxDistanceWrapper {
     }
     var r = 0
     for (i <- 0 until l) {
-      if (s(i) != t(i) && s(i) != '-' && t(i) != '-') {
+      if (s(i) != t(i) && s(i) != ' ' && t(i) != ' ' && t(i) != '-' && s(i) != '-') {
         r += 1
       }
     }

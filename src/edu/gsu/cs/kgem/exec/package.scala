@@ -56,6 +56,21 @@ package object exec {
   }
 
   /**
+   * Read file with consensus sequence and wrap it into
+   * Read object
+   * @param cfl
+   * File with consensus
+   * @return
+   * Read object or Nil if not present
+   */
+  def readDataAndInitialSeqs(cfl: File): Iterable[Read] = {
+    if (cfl == null) return null
+    val consensus = readFastaDNASequence(cfl)
+    return for (entry <- consensus)
+    yield new Read(toSAMRecord(entry._2.toString))
+  }
+
+  /**
    * Init read frequencies according to counter map
    * @param reads
    * Collection of reads

@@ -13,6 +13,8 @@ import collection.JavaConversions._
  * To change this template use File | Settings | File Templates.
  */
 object SAMParser {
+  val S = " "
+
   def readSAMFile(f: File): Iterable[SAMRecord] = {
     if (!f.exists()) System.err.println("File not found!")
     val reader = new SAMFileReader(f)
@@ -28,7 +30,7 @@ object SAMParser {
     val str = sam.getReadString
     val cs = sam.getCigar.getCigarElements
     for (i <- 0 until sam.getAlignmentStart - 1)
-      sb.append("-")
+      sb.append(S)
     for (cigar: CigarElement <- cs) {
       if (!cigar.getOperator.consumesReadBases) {
         for (i <- 0 until cigar.getLength)
@@ -43,12 +45,12 @@ object SAMParser {
     }
     val cutStr = sb.toString
     var ll = cutStr.length
-    if (cutStr.length >= l)
+    if (ll >= l)
       return cutStr
     else
       while (ll < l) {
         ll += 1
-        sb.append("-")
+        sb.append(S)
       }
     sb.toString
   }

@@ -54,7 +54,13 @@ class Genotype(n: Int) {
     this(str.length)
     var i = 0
     for (d <- data) {
-      d(str(i).toString) = 1.0
+      val cur_symb = str(i).toString
+      if (d.contains(cur_symb))
+        d(cur_symb) = 1.0
+      else {
+        val avg = 1.0 / d.size
+        d.keys.foreach(k => d(k) = avg)
+      }
       i += 1
     }
     round
@@ -100,9 +106,10 @@ class Genotype(n: Int) {
 
   def round = {
     data foreach (m => {
+      val ss = (m.map(x => x._2).sum * 1.1) / m.size
       val s = m.maxBy(e => e._2)
       m foreach (e => m(e._1) = eps)
-      if (s._2 > 0) m(s._1) = 1
+      if (s._2 > ss) m(s._1) = 1
     })
     sqNormalize
     data
@@ -111,8 +118,10 @@ class Genotype(n: Int) {
   def toIntegralString = {
     val s = new StringBuilder
     data foreach (m => s ++= {
+      val avg = 1.01 * m.map(e => e._2).sum / m.size
       val mm = m.maxBy(e => e._2)
-      if (mm._2 > 0.3) mm._1 else N
+      if (mm._2 > avg) mm._1
+      else N
     })
     s.toString
   }

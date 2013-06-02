@@ -19,14 +19,15 @@ object Main {
   }
 
   private def runMaxHD(args: Array[String]) {
-    val (k, tr, fl, out, outh) = ArgumentParser.parseMaxHD(args)
+    val (k, tr, fl, cfl, out, outh) = ArgumentParser.parseMaxHD(args)
     val s = System.currentTimeMillis
 
     val reads = if (fl.getName.toLowerCase.endsWith(".sam")) initSAMReads(fl)
     else initFastaReads(fl)
+    val seeds = readDataAndInitialSeqs(cfl)
     initReads(reads.toList)
 
-    val gens = run(reads.toList, k, tr)
+    val gens = run(reads.toList, k, tr, seeds)
 
     outputHaplotypes(outh, gens)
     outputResult(out, gens, s, reads.size)

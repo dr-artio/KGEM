@@ -11,6 +11,7 @@ import edu.gsu.cs.kgem.model.KGEM._
  * Object for handling Monte Carlo series of experiments
  * and according to statistics filter results of KGEM
  */
+@deprecated
 object MonteCarloWrapper {
   /**
    * Perform KGEM n times and select
