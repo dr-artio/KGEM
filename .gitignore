@@ -1,0 +1,6 @@
+# target #
+target/*
+
+# IDE stuff#
+*.iml
+.idea/*

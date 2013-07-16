@@ -38,8 +38,6 @@ object MaxDistanceWrapper {
    * Maximum size of population
    * @param threshold
    * Min hamming distance between seeds
-   * @param consensus
-   * Consensus wrapped into Read object
    * @return
    * Collection of genotypes (haplotypes)
    */
@@ -136,8 +134,7 @@ object MaxDistanceWrapper {
   def hammingDistance(s: String, t: String): Int = {
     val l = s.length
     if (l != t.length) {
-      System.err.println("Hamming Distance: Strings have different length")
-      return -1
+      throw new IllegalArgumentException("Hamming Distance: Strings have different length")
     }
     var r = 0
     for (i <- 0 until l) {
