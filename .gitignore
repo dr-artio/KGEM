@@ -4,3 +4,6 @@ target/*
 # IDE stuff#
 *.iml
 .idea/*
+
+# Manifest #
+*.MF

@@ -68,9 +68,9 @@
         </dependency>
         <!-- other biojava jars as needed -->
         <dependency>
-            <groupId>net.sourceforge.argparse4j</groupId>
-            <artifactId>argparse4j</artifactId>
-            <version>0.4.0</version>
+            <groupId>com.github.scopt</groupId>
+            <artifactId>scopt_2.10</artifactId>
+            <version>3.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.utgenome.thirdparty</groupId>
@@ -85,14 +85,14 @@
             <url>http://www.biojava.org/download/maven/</url>
         </repository>
         <repository>
-            <id>argparse4j-maven-repo</id>
-            <name>argparse4j repository</name>
-            <url>https://github.com/tatsuhiro-t/argparse4j</url>
-        </repository>
-        <repository>
             <id>paralelj-maven-repo</id>
             <name>ParallelJ repository</name>
             <url>http://repo1.maven.org/maven2/org/parallelj/parallelj/</url>
+        </repository>
+        <repository>
+            <id>scopt</id>
+            <name>Scopt repository</name>
+            <url>http://github.com/scopt/scopt</url>
         </repository>
     </repositories>
 </project>
