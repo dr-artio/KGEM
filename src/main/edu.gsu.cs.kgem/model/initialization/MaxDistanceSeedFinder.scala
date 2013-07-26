@@ -1,5 +1,6 @@
-package edu.gsu.cs.kgem.model
+package edu.gsu.cs.kgem.model.initialization
 
+import edu.gsu.cs.kgem.model.{Genotype, Read}
 import java.util.Random
 import scala.collection.mutable
 
@@ -11,46 +12,12 @@ import scala.collection.mutable
  * Class to wrap derandomized KGEM, i. e. initialization with maximizing distance between
  * seeds and detection of size of the population via distance threshold.
  */
-object MaxDistanceWrapper {
+object MaxDistanceSeedFinder extends SeedFinder {
 
   /**
-   * Run KGEM procedure for the reads
-   * @param reads
-   * Collection of reads
-   * @param k
-   * Maximum size of population
-   * @param threshold
-   * Min hamming distance between seeds
-   * @return
-   * Collection of genotypes (haplotypes)
-   */
-  def run(reads: Iterable[Read], k: Int, threshold: Int) = {
-    val gens = initSeeds(reads, k, threshold, null).map(r => new Genotype(r.seq))
-    println("Initialization gave %d seeds in the population(Threshold: %d, k: %d)".format(gens.size, threshold, k))
-    KGEM.run(gens.toList)
-  }
-
-  /**
-   * Run KGEM procedure for the reads and consensus as first seed
-   * @param reads
-   * Collection of reads
-   * @param k
-   * Maximum size of population
-   * @param threshold
-   * Min hamming distance between seeds
-   * @return
-   * Collection of genotypes (haplotypes)
-   */
-  def run(reads: Iterable[Read], k: Int, threshold: Int, seeds: Iterable[Read]) = {
-    val gens = initSeeds(reads, k, threshold, seeds).map(r => new Genotype(r.seq))
-    println("Initialization gave %d seeds in the population(Threshold: %d, k: %d)".format(gens.size, threshold, k))
-    KGEM.run(gens.toList)
-  }
-
-  /**
-   * Initialize seeds according to maximization Hamming
-   * distance between all pairs of reads with pre-
-   * specified threshold
+   * Find seeds according to maximization Hamming distance between all pairs
+   * of reads with pre-specified threshold. This is a 2-approximation to the
+   * metric k-center problem.
    *
    * @param reads
    * Collection of reads
@@ -60,28 +27,21 @@ object MaxDistanceWrapper {
    * Min hamming distance between seeds
    * @return
    */
-  private def initSeeds(reads: Iterable[Read], k: Int, threshold: Int, candidates: Iterable[Read]): mutable.MutableList[Read] = {
-    if (candidates != null) {
-      val seeds = new mutable.MutableList[Read]()
-      for (c <- candidates) seeds += c
-      return seeds
-    }
+  def findSeeds(reads: Iterable[Read], k: Int, threshold: Int): Iterable[Genotype] = {
     val readArr = reads.toArray
     val first = getFirstSeed(readArr)
     var seeds = new mutable.MutableList[Read]()
     seeds += first
     var distanceMap = readArr.filter(r => !r.equals(first)).map(r => (r, hammingDistance(first, r)))
     while (seeds.size < k) {
-      if (distanceMap.isEmpty) return seeds
+      if (distanceMap.isEmpty) return seeds.map(r => new Genotype(r.seq))
       val cur = distanceMap.maxBy(e => e._2)
       println("Current max HD: %d".format(cur._2))
-      if (cur._2 < threshold) return seeds
+      if (cur._2 < threshold) return seeds.map(r => new Genotype(r.seq))
       seeds += cur._1
-      distanceMap = distanceMap.map(e => (e._1, min(e._2, hammingDistance(cur._1, e._1)))) //.filter(e => (e._2 >= threshold))
-      //println("Current size of DistnceMap: %d".format(distanceMap.size))
-      //distanceMap = readArr.filter(r => !seeds.contains(r)).map(r => (r, seeds.map(s => hammingDistance(s, r)).min)).toMap
+      distanceMap = distanceMap.map(e => (e._1, min(e._2, hammingDistance(cur._1, e._1))))
     }
-    return seeds
+    return seeds.map(r => new Genotype(r.seq))
   }
 
   /**

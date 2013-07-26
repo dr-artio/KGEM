@@ -1,6 +1,6 @@
-package edu.gsu.cs.kgem.model
+package edu.gsu.cs.kgem.model.estimation
 
-
+import edu.gsu.cs.kgem.model.{KGEM, Read, Genotype}
 /**
  * Created with IntelliJ IDEA.
  * User: aartyomenko
@@ -26,6 +26,7 @@ class EM(gens: List[Genotype], reads: List[Read]) {
     })
     d
   }
+  val total = reads.map(r => r.freq).sum
 
   /**
    * Initialize h_rs in two dimensional grid of
@@ -74,7 +75,7 @@ class EM(gens: List[Genotype], reads: List[Read]) {
 
   /**
    * Expectation step.
-   * For each pair r and q p_qr=f_q*h_qr / (sum_qi_r(f_qi*h_qir))
+   * For each pair q and r p_qr=f_q*h_qr / (sum_qi_r(f_qi*h_qir))
    * @return
    * p_qrs probabilities of emitting read by corresponding
    * genotype
@@ -108,7 +109,7 @@ class EM(gens: List[Genotype], reads: List[Read]) {
    */
   def mStep(pqrs: Array[Array[Double]]): Double = {
     val nfqs = Array.tabulate[Double](gens.size)((i) => {
-      rs.map(k => pqrs(i)(k) * rFreqs(k)).sum
+      rs.map(k => pqrs(i)(k) * reads(k).freq).sum / total
     })
     val change = ((for (i <- 0 until gens.size) yield Math.abs(nfqs(i) - freqs(i))) max)
     for (i <- gs) {

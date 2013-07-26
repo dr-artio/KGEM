@@ -1,6 +1,7 @@
 package edu.gsu.cs.kgem.model
 
 import collection.mutable
+import edu.gsu.cs.kgem.model.estimation.{EMMAP, EM}
 import util.Random
 
 /**
@@ -16,11 +17,8 @@ object KGEM {
   private var em = new EM(List[Genotype](), List[Read]())
   private var tr = 0.0005
   var table = new mutable.MutableList[Map[String, List[(Read, Int)]]]()
-
-  def initSeeds(n: Int): List[Genotype] = {
-    val seeds = sample(reads, n)
-    return seeds.map(s => new Genotype(s.seq)).toList
-  }
+  var loglikelihood = 0.0
+  var maximumAP = 0.0
 
   def initReads(reads: List[Read]) = {
     this.reads = reads
@@ -35,18 +33,21 @@ object KGEM {
     }
   }
 
-  def run(gens: List[Genotype]) = {
+  def run(gens: Iterable[Genotype], alpha: Double) = {
     var collapse = gens
     var collapsed = gens.size
+    var genMap = new mutable.HashMap[Genotype, Int]()
     do {
       collapsed = collapse.size
-      runKgem(collapse)
+      runKgem(collapse, alpha)
       val col = collapse.map(g => (g.toIntegralString, g)).toMap
       collapse = col.values.toList
       collapse = thresholdClean(collapse, tr)
+      collapse.zipWithIndex.foreach(pair => genMap += pair)
       collapsed -= collapse.size
       println("KGEM collapsed %d genotypes".format(collapsed))
     } while (collapsed > 0)
+    calcLogLikelihood(collapse, genMap, alpha)
     collapse
   }
 
@@ -54,35 +55,56 @@ object KGEM {
     this.tr = tr
   }
 
-  private def thresholdClean(gens: List[Genotype], tr: Double) = {
+  private def calcLogLikelihood(gens: Iterable[Genotype], genIdxMap: mutable.HashMap[Genotype, Int], alpha: Double) = {
+    val pqrs = em.eStep
+    var ll = 0.0
+    for (readpair <- zreads) {
+      val read = readpair._1
+      val idx = readpair._2
+      ll += (read.freq * math.log(gens.map(gen => gen.freq * pqrs(genIdxMap(gen))(idx)).sum))
+    }
+    if (alpha == 0.0) {
+      this.loglikelihood = ll
+    } else {
+      this.maximumAP = ll
+    }
+  }
+
+  private def thresholdClean(gens: Iterable[Genotype], tr: Double) = {
     val cleaned = gens.filter(g => g.freq >= tr)
     cleaned
   }
 
-  private def runKgem(gens: List[Genotype]) = {
+  private def runKgem(gens: Iterable[Genotype], alpha: Double) = {
     for (g <- gens) g.convergen = false
     var i = 1
     while (!gens.forall(g => g.convergen) && i <= 5) {
       val st = System.currentTimeMillis
       rounding(gens)
-      runEM(gens)
+      runEM(gens, alpha)
       alleleFreqEstimation(gens)
       println("KGEM iteration #%d done in %.2f minutes".format(i, ((System.currentTimeMillis - st) * 1.0 / 60000)))
       i += 1
     }
   }
 
-  private def rounding(gens: List[Genotype]) = {
+  private def rounding(gens: Iterable[Genotype]) = {
     for (g <- gens) g.round
   }
 
-  def runEM(gens: List[Genotype]) = {
-    em = new EM(gens, reads)
-    em.run
+  def runEM(gens: Iterable[Genotype], alpha: Double) = alpha match {
+    case 0.0 => {
+      em = new EM(gens.toList, reads)
+      em.run
+    }
+    case _ => {
+      em = new EMMAP(gens.toList, reads, alpha)
+      em.run
+    }
   }
 
 
-  private def alleleFreqEstimation(gens: List[Genotype]) = {
+  private def alleleFreqEstimation(gens: Iterable[Genotype]) = {
     val pqrs = em.eStep
     for (g <- gens.zipWithIndex.par) doAlleleFreqEstimation(g._1, pqrs(g._2))
   }
@@ -103,36 +125,5 @@ object KGEM {
     g.convergen = prev.equals(g.toIntegralString)
   }
 
-  /**
-   * Method for choosing random sample of size @size from the
-   * collection of objects. Returns the whole list is @size
-   * is greater than size of the original collection.
-   * @param iter
-   * Any iterable collection
-   * @param size
-   * Size of the required sample
-   * @tparam T
-   * Generic parameter (Class of objects in list)
-   * @return
-   * List of randomly chosen elements from collection
-   * of specified size @size
-   */
-  private def sample[T](iter: Iterable[T], size: Int) = {
-    if (iter.size < size) iter.toList
-    var res = new mutable.MutableList[T]()
-    val rnd = new Random(System.currentTimeMillis)
-    var needed = size
-    var len = iter.size
-    val iterator = iter.iterator
-    while (needed > 0 && iterator.hasNext) {
-      val item = iterator.next
-      if (rnd.nextInt(len) < needed) {
-        res += item
-        needed -= 1
-      }
-      len -= 1
-    }
-    res
-  }
 
 }

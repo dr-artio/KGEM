@@ -1,12 +1,12 @@
-package edu.gsu.cs.kgem.model
+package edu.gsu.cs.kgem.model.initialization
 
 import org.scalatest.FlatSpec
-import edu.gsu.cs.kgem.model.MaxDistanceWrapper.{hammingDistance, min}
+import edu.gsu.cs.kgem.model.initialization.MaxDistanceSeedFinder._
 
 /**
  *  Author: Nicholas Mancuso
  */
-class MaxDistanceWrapperTest extends FlatSpec {
+class MaxDistanceSeedFinderTest extends FlatSpec {
   "The Hamming distance function" should "sum the number of non-space or non-dash " +
     "mismatches between two equal-length strings" in {
     val str1 = "ACCG-TC"

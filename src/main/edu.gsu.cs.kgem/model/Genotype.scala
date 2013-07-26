@@ -14,9 +14,9 @@ import collection.mutable
 object Genotype {
   /**
    * Initialization of mappings for building one-to-one
-   * correspondence between NucleotideCompounds and st-
-   * ring representations of nucleotides (current DNA
-   * alphabet)
+   * correspondence between NucleotideCompounds and
+   * string representations of nucleotides
+   * (current DNA alphabet)
    */
   val nuclMap: Map[NucleotideCompound, String] = {
     DNACompoundSet.getDNACompoundSet.getAllCompounds.map(n => {
