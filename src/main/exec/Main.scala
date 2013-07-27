@@ -16,7 +16,7 @@ import java.io.PrintStream
  * Arguments passed through command line
  */
 object Main {
-  def main(args: Array[String]) = {
+  def main(args: Array[String]): Unit = {
     ArgumentParser.parseArguments(args) match {
       case None => sys.exit(1)
       case Some(config: Config) => {
@@ -30,20 +30,22 @@ object Main {
           case Some((hap: PrintStream, res: PrintStream)) =>
 
             val reads = if (config.readsFile.getName.toLowerCase.endsWith(".sam")) {
-              initSAMReads(config.readsFile).toList
+              initSAMReads(config.readsFile)
+            } else if (config.readsFile.getName.toLowerCase.endsWith(".txt")){
+              initTxtReads(config.readsFile)
             } else {
-              initFastaReads(config.readsFile).toList
+              initFastaReads(config.readsFile)
             }
 
             //init KGEM with the reads and get our scoring function + alpha
-            KGEM.initReads(reads)
+            KGEM.initReads(reads.toList)
             val scoreFunc = Score.getScoringFunction(config.scoringFunc)
             val alpha = Score.getAlpha(config.scoringFunc, true)
 
             //get the genotypes from the best model in range or use the provided seeds
             val gens = if (config.consensusFile == null) {
               val selector = new ModelSelector(config.k, scoreFunc, MaxDistanceSeedFinder)
-              selector.selectModel(reads, config.threshold, alpha)
+              selector.selectModel(reads.toList, config.threshold, alpha)
             } else {
               val seeds = initFastaReads(config.consensusFile).map(r => new Genotype(r.seq))
               KGEM.run(seeds, alpha)
@@ -57,7 +59,7 @@ object Main {
               "Total number of haplotypes is %d \nbye bye").format(
               ((System.currentTimeMillis - s) * 0.0001 / 6), gens.size))
         }
-        System.exit(0)
+        sys.exit(0)
       }
     }
   }

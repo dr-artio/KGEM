@@ -7,6 +7,7 @@ import java.io.File
 import net.sf.samtools.{SAMFileHeader, SAMRecord}
 import org.biojava3.core.sequence.io.FastaReaderHelper.readFastaDNASequence
 import collection.JavaConversions._
+import scala.io.Source.fromFile
 
 /**
  * Created with IntelliJ IDEA.
@@ -48,6 +49,26 @@ package object exec {
   def initFastaReads(fl: File): Iterable[Read] = {
     val seqs = readFastaDNASequence(fl)
     val lines = seqs.values.map(s => s.toString).iterator
+    val readsMap = toCounterMap(lines)
+    val samRecords = toSAMRecords(readsMap.keys)
+    val reads = toReads(samRecords)
+    initReadFreqs(reads, readsMap)
+    reads
+  }
+
+  /**
+   * Read alignment in internal format.
+   * Reads in lines aligned with spaces
+   * all have the same length. Output
+   * of alignment postprocessing tool.
+   * (Temporary solution)
+   * @param fl
+   *           Aligned reads (Internal txt format)
+   * @return
+   *         Iterable collection of reds
+   */
+  def initTxtReads(fl: File): Iterable[Read] = {
+    val lines = fromFile(fl).getLines
     val readsMap = toCounterMap(lines)
     val samRecords = toSAMRecords(readsMap.keys)
     val reads = toReads(samRecords)
@@ -144,9 +165,11 @@ package object exec {
   }
 
   /**
-   * Deserialize one SAMRecord from String
+   * Deserialize one {@see SAMRecord} from {@see String}
    * @param st
+   *           {@see SAMRecord} in {@see String}
    * @return
+   *         Wrapped {@see SAMRecord} object
    */
   @deprecated
   private def toSAMRecord(st: String) = {

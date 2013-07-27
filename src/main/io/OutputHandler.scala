@@ -35,7 +35,7 @@ object OutputHandler {
    *          Number of reads
    */
   def outputResult(out: PrintStream, gens: Iterable[Genotype], n: Int) = {
-    val gg = gens.map(g => (g.toIntegralString, g)).toMap
+    val gg = gens.map(g => (g.toIntegralString, g)).toIndexedSeq.sortBy(g => -g._2.freq)
     for (g <- gg) {
       val fn = (g._2.freq * n).asInstanceOf[Int]
       for (i <- 1 to fn)
@@ -52,8 +52,8 @@ object OutputHandler {
    *             Collection of haplotypes (Result)
    */
   def outputHaplotypes(outh: PrintStream, gens: Iterable[Genotype]) = {
-    val gg = gens.map(g => (g.toIntegralString, g)).toMap
-    var i = 1
+    val gg = gens.map(g => (g.toIntegralString, g)).toIndexedSeq.sortBy(g => -g._2.freq)
+    var i = 0
     for (g <- gg) {
       outh.println(">read%d_freq_%.10f\n%s".format(i, g._2.freq, g._1))
       i+=1

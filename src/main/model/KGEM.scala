@@ -2,7 +2,6 @@ package edu.gsu.cs.kgem.model
 
 import collection.mutable
 import edu.gsu.cs.kgem.model.estimation.{EMMAP, EM}
-import util.Random
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,11 +11,11 @@ import util.Random
  * To change this template use File | Settings | File Templates.
  */
 object KGEM {
-  private var reads = List[Read]()
+  private var reads: List[Read] = List[Read]()
   private var zreads = reads.zipWithIndex
   private var em = new EM(List[Genotype](), List[Read]())
   private var tr = 0.0005
-  var table = new mutable.MutableList[Map[String, List[(Read, Int)]]]()
+  var table = new mutable.MutableList[Map[String, Iterable[(Read, Int)]]]()
   var loglikelihood = 0.0
   var maximumAP = 0.0
 
@@ -98,7 +97,7 @@ object KGEM {
       em.run
     }
     case _ => {
-      em = new EMMAP(gens.toList, reads, alpha)
+      em = new EMMAP(gens.toList, reads.toList, alpha)
       em.run
     }
   }

@@ -1,7 +1,7 @@
 package edu.gsu.cs.kgem.model.estimation
 
+import cc.mallet.util.Dirichlet
 import edu.gsu.cs.kgem.model.{Read, Genotype}
-import cc.mallet.util.{Dirichlet}
 
 /**
  * Created with IntelliJ IDEA.
