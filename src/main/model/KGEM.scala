@@ -54,6 +54,11 @@ object KGEM {
     this.tr = tr
   }
 
+  def initThreshold = {
+    this.tr = 0.1 / math.pow((reads.map(r => r.freq).sum), 0.33)
+    println("Computed threshold: %f".format(tr))
+  }
+
   private def calcLogLikelihood(gens: Iterable[Genotype], genIdxMap: mutable.HashMap[Genotype, Int], alpha: Double) = {
     val pqrs = em.eStep
     var ll = 0.0
@@ -121,7 +126,7 @@ object KGEM {
           e._1(n) += pqs(r._2)
       }
     }
-    g.convergen = prev.equals(g.toIntegralString)
+    g.convergen = prev.equals(g.toIntegralString) || (g.freq < tr)
   }
 
 

@@ -44,6 +44,8 @@ object Main {
 
             //get the genotypes from the best model in range or use the provided seeds
             val gens = if (config.consensusFile == null) {
+              if (config.k.length > 1) KGEM.initThreshold(0)
+              else KGEM.initThreshold
               val selector = new ModelSelector(config.k, scoreFunc, MaxDistanceSeedFinder)
               selector.selectModel(reads.toList, config.threshold, alpha)
             } else {
