@@ -1,6 +1,8 @@
 package edu.gsu.cs.kgem.model
 
 import collection.mutable
+import util.Random
+import org.apache.commons.math3.distribution.BinomialDistribution
 import edu.gsu.cs.kgem.model.estimation.{EMMAP, EM}
 
 /**
@@ -15,9 +17,15 @@ object KGEM {
   private var zreads = reads.zipWithIndex
   private var em = new EM(List[Genotype](), List[Read]())
   private var tr = 0.0005
+  private val pValue = 0.05
   var table = new mutable.MutableList[Map[String, Iterable[(Read, Int)]]]()
   var loglikelihood = 0.0
   var maximumAP = 0.0
+
+  def initSeeds(n: Int): List[Genotype] = {
+    val seeds = sample(reads, n)
+    return seeds.map(s => new Genotype(s.seq)).toList
+  }
 
   def initReads(reads: List[Read]) = {
     this.reads = reads
@@ -55,7 +63,7 @@ object KGEM {
   }
 
   def initThreshold = {
-    this.tr = 0.1 / math.pow((reads.map(r => r.freq).sum), 0.33)
+    this.tr = getThreshold
     println("Computed threshold: %f".format(tr))
   }
 
@@ -129,5 +137,74 @@ object KGEM {
     g.convergen = prev.equals(g.toIntegralString) || (g.freq < tr)
   }
 
+  /**
+   * Finds argmin_x((F(x) < pValue/n), where
+   * F(x) is survival function of binomial distribution
+   * pValue - measure of randomness (Default: 5% hardcoded)
+   * n - number of reads in a given sample
+   * @return
+   *         Estimated threshold
+   */
+  private def getThreshold = {
+    val n = reads.map(r => r.freq).sum
+    val topBound = pValue / n
+    val p = 4 * em.eps
+    var step = (n/2).toInt
+    var x = step
+    while (step > 1) {
+      step /= 2
+      if (sf(x, n.toInt, p)<topBound) x -= step
+      else x += step
+    }
+    x / n
+  }
+
+  /**
+   * Method computing Survival Function
+   * (1 - CDF(x)) for binomial distribution
+   * with a given parameters
+   * @param x
+   *          Argument for Pr(X>=x)
+   * @param n
+   *          Number of samples in Binomial
+   *          distribution
+   * @param p
+   *          Probability of success
+   */
+  private def sf(x: Int, n: Int, p: Double) = {
+    1.0 - new BinomialDistribution(n, p).cumulativeProbability(x)
+  }
+
+  /**
+   * Method for choosing random sample of size @size from the
+   * collection of objects. Returns the whole list is @size
+   * is greater than size of the original collection.
+   * @param iter
+   * Any iterable collection
+   * @param size
+   * Size of the required sample
+   * @tparam T
+   * Generic parameter (Class of objects in list)
+   * @return
+   * List of randomly chosen elements from collection
+   * of specified size @size
+   */
+  private def sample[T](iter: Iterable[T], size: Int) = {
+    if (iter.size < size) iter.toList
+    var res = new mutable.MutableList[T]()
+    val rnd = new Random(System.currentTimeMillis)
+    var needed = size
+    var len = iter.size
+    val iterator = iter.iterator
+    while (needed > 0 && iterator.hasNext) {
+      val item = iterator.next
+      if (rnd.nextInt(len) < needed) {
+        res += item
+        needed -= 1
+      }
+      len -= 1
+    }
+    res
+  }
 
 }
