@@ -1,6 +1,6 @@
 package edu.gsu.cs.kgem.io
 
-import edu.gsu.cs.kgem.model.Genotype
+import edu.gsu.cs.kgem.model.{Genotype, Read}
 import java.io.{File, PrintStream}
 import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.FastaWriterHelper
@@ -48,11 +48,7 @@ object OutputHandler {
       dna.setOriginalHeader("read%d_freq_%.10f".format(g._2,g._1._2))
       dna
     })
-    try {
-      FastaWriterHelper.writeNucleotideSequence(out, haplSeqs)
-    } finally {
-      out.close()
-    }
+    writeFasta(out, haplSeqs)
   }
 
   /**
@@ -64,16 +60,52 @@ object OutputHandler {
    */
   def outputHaplotypes(out: PrintStream, gens: Iterable[Genotype], clean:(String => String) = (s => s)) = {
     val gg = gens.toIndexedSeq.sortBy(g => -g.freq)
-    val haplSeqs = gg.zipWithIndex.map(g => {
-      val seq = new DNASequence(clean(g._1.toIntegralString))
-      seq.setOriginalHeader("read%d_freq_%.10f".format(g._2,g._1.freq))
+    val haplSeqs = gg.map(g => {
+      val seq = new DNASequence(clean(g.toIntegralString))
+      seq.setOriginalHeader("haplotype%d_freq_%.10f".format(g.ID,g.freq))
       seq
     })
+    writeFasta(out, haplSeqs)
+  }
+
+  /**
+   * Output reads with clustering info
+   * @param out
+   *             {@see PrintStream} object, either file or stdout
+   * @param gens
+   *             Collection of Haplotypes
+   * @param reads
+   *              Collection of reads
+   * @param pqrs
+   *             Clustering coefficients
+   */
+  def outputClusteredFasta(out: PrintStream, gens: Iterable[Genotype], reads: Iterable[Read], pqrs: Array[Array[Double]]) = {
+    val ggs = gens.zipWithIndex
+
+    val faReads = reads.zipWithIndex.map( rd => {
+      val seq = new DNASequence(rd._1.seq.replace(" ", "").replace("-",""))
+      seq.setOriginalHeader("read%d_%s".format(rd._2, clusteringString(ggs, pqrs, rd._2)))
+      seq
+    })
+
+    writeFasta(out, faReads)
+  }
+
+
+  private def writeFasta(out: PrintStream, seq: Iterable[DNASequence]) {
     try {
-      FastaWriterHelper.writeNucleotideSequence(out, haplSeqs)
+      FastaWriterHelper.writeNucleotideSequence(out, seq)
     } finally {
       out.close()
     }
+  }
+
+  private def clusteringString(ggs: Iterable[(Genotype, Int)], pqrs: Array[Array[Double]], readIndex: Int) = {
+    val sb = new StringBuffer()
+    for (g <- ggs) {
+      sb.append("_h%d=%.5f".format(g._1.ID, pqrs(g._2)(readIndex)))
+    }
+    sb.toString
   }
 
   /**
@@ -87,7 +119,7 @@ object OutputHandler {
    *         Some((hapOutput: PrintStream, resultsOutput: PrintStream)).
    *
    */
-  def setupOutputDir(dir: File): Option[(PrintStream, PrintStream, PrintStream, PrintStream)] = {
+  def setupOutputDir(dir: File): Option[(PrintStream, PrintStream, PrintStream, PrintStream, PrintStream)] = {
     // Try to make the output directory. If it fails, return None.
     if (!dir.exists()) {
       if (!dir.mkdir()) {
@@ -102,6 +134,7 @@ object OutputHandler {
     val cleanedHapOutputName = "%s%s".format(baseName, "haplotypes_cleaned.fa")
     val readsOutputName = "%s%s".format(baseName, "reads.fa")
     val cleanedReadsOutputName = "%s%s".format(baseName, "reads_cleaned.fa")
+    val readsClustered = "%s%s".format(baseName, "reads_clustered.fa")
 
     try {
         val hapout = new PrintStream(hapOutputName)
@@ -111,7 +144,12 @@ object OutputHandler {
             val hapclout = new PrintStream(cleanedHapOutputName)
             try {
               val readclsout = new PrintStream(cleanedReadsOutputName)
-              return Some((hapout, hapclout, readsout, readclsout))
+              try {
+                val readsclust = new PrintStream(readsClustered)
+                return Some((hapout, hapclout, readsout, readclsout, readsclust))
+              } catch {
+                case _: Throwable => println("Cannot create file: " + readsClustered); return None
+              }
             } catch {
               case _: Throwable => println("Cannot create file: " + cleanedReadsOutputName); return None
             }

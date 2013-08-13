@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>edu.gsu.cs</groupId>
+    <groupId>kgem</groupId>
     <artifactId>KGEM</artifactId>
     <version>0.3.1</version>
     <packaging>jar</packaging>
@@ -14,12 +14,12 @@
 
     <developers>
         <developer>
-            <id>night_stalker</id>
+            <id>night-stalker</id>
             <name>Alex Artyomenko</name>
             <email>aartyomenko@cs.gsu.edu</email>
         </developer>
         <developer>
-            <id>quatro</id>
+            <id>quattro</id>
             <name>Nicholas Mancuso</name>
             <email>nmancuso@cs.gsu.edu</email>
         </developer>
@@ -87,10 +87,36 @@
                     </jvmArgs>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>com.github.github</groupId>
+                <artifactId>site-maven-plugin</artifactId>
+                <version>0.7</version>
+                <configuration>
+                    <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
+                    <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
+                    <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
+                    <branch>refs/heads/mvn-repo</branch>                       <!-- remote branch name -->
+                    <includes><include>**/*</include></includes>
+                    <repositoryName>KGEM</repositoryName>      <!-- github repo name -->
+                    <repositoryOwner>night-stalker</repositoryOwner>    <!-- github username  -->
+                </configuration>
+                <executions>
+                    <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
+                    <execution>
+                        <goals>
+                            <goal>site</goal>
+                        </goals>
+                        <phase>deploy</phase>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- github server corresponds to entry in ~/.m2/settings.xml -->
+        <github.global.server>github</github.global.server>
     </properties>
     <dependencies>
         <dependency>
@@ -154,4 +180,11 @@
             <url>http://github.com/scopt/scopt</url>
         </repository>
     </repositories>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub ${project.artifactId} Repository</name>
+            <url>https://raw.github.com/night-stalker/${project.artifactId}/mvn-repo</url>
+        </repository>
+    </distributionManagement>
 </project>

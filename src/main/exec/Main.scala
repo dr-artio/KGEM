@@ -27,7 +27,7 @@ object Main {
         // they made a mistake.
         setupOutputDir(config.output) match {
           case None => sys.exit(1)
-          case Some((hap: PrintStream, hapcl: PrintStream, res: PrintStream, rescl: PrintStream)) =>
+          case Some((hap: PrintStream, hapcl: PrintStream, res: PrintStream, rescl: PrintStream, rclust: PrintStream)) =>
 
             val reads = if (config.readsFile.getName.toLowerCase.endsWith(".sam")) {
               initSAMReads(config.readsFile)
@@ -59,6 +59,8 @@ object Main {
             outputHaplotypes(hapcl, gens, s => s.replaceAll("-", ""))
             outputResult(res, gens, n)
             outputResult(rescl, gens, n, s => s.replaceAll("-", ""))
+            val pqrs = KGEM.getPqrs
+            outputClusteredFasta(rclust, gens, KGEM.getReads, pqrs)
 
             println(("The whole procedure took %.2f minutes\n" +
               "Total number of haplotypes is %d \nbye bye").format(

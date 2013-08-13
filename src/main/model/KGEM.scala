@@ -206,4 +206,16 @@ object KGEM {
     res
   }
 
+  /**
+   * Get pqrs for generating clustering string
+   * @return
+   *         Matrix with P_qr 's
+   */
+  def getPqrs = {
+    em.eStep
+  }
+
+  def getReads = {
+    reads
+  }
 }

@@ -29,6 +29,12 @@ object Genotype {
 
   val N = "N"
   val eps = 0.0005
+  private var id = 0
+
+  private def generateID = {
+    id += 1
+    id
+  }
 
   def reverseMap[K, V](mp: Map[K, V]): Map[V, Set[K]] = {
     val r = mp.values.map(v => (v, mutable.Set[K]())).toMap
@@ -44,6 +50,8 @@ object Genotype {
 import Genotype._
 
 class Genotype(n: Int) {
+  val ID = generateID
+
   val data: List[mutable.Map[String, Double]] = {
     List.range(0, n).map(i => mutable.Map(sMap.keys.map(s => (s, 0D)).toSeq: _*))
   }
