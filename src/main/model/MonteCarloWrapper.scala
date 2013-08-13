@@ -35,7 +35,7 @@ object MonteCarloWrapper {
     for (i <- 0 until n) {
       println("Monte Carlo Wrapper: run #%d".format(i + 1))
       var gens =  RandomSeedFinder.findSeeds(reads, k, 0)
-      gens = KGEM.run(gens, 0.0)
+      gens = KGEM.run(gens)
       for (g <- gens) {
         val st = g.toIntegralString
         if (mcMap.contains(st)) mcMap(st) += 1
@@ -43,7 +43,7 @@ object MonteCarloWrapper {
       }
     }
     val fgens = mcMap.filter(e => e._2 >= m).map(e => new Genotype(e._1)).toList
-    KGEM.runEM(fgens, 0.0)
+    KGEM.runEM(fgens)
     fgens
   }
 }

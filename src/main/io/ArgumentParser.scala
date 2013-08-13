@@ -15,7 +15,7 @@ object ArgumentParser {
 
   def parseArguments(args: Array[String]): Option[Config] = {
     val parser = new OptionParser[Config]("kGEM") {
-      head("kGEM version 0.3: Local Reconstruction for Mixed Viral Populations.")
+      head("kGEM version 0.3.1: Local Reconstruction for Mixed Viral Populations.")
       arg[File]("ReadsFile") action {
         (x, c) => c.copy(readsFile = x)
       } text("Fasta or Sam file containing aligned sequence data.")

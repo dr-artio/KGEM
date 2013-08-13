@@ -40,7 +40,7 @@ object KGEM {
     }
   }
 
-  def run(gens: Iterable[Genotype], alpha: Double) = {
+  def run(gens: Iterable[Genotype], alpha: Double = 0) = {
     var collapse = gens
     var collapsed = gens.size
     var genMap = new mutable.HashMap[Genotype, Int]()
@@ -93,7 +93,8 @@ object KGEM {
     while (!gens.forall(g => g.convergen) && i <= 5) {
       val st = System.currentTimeMillis
       rounding(gens)
-      runEM(gens, alpha)
+      if (alpha > 0) runEM(gens, alpha)
+        else runEM(gens)
       alleleFreqEstimation(gens)
       println("KGEM iteration #%d done in %.2f minutes".format(i, ((System.currentTimeMillis - st) * 1.0 / 60000)))
       i += 1
@@ -104,17 +105,15 @@ object KGEM {
     for (g <- gens) g.round
   }
 
-  def runEM(gens: Iterable[Genotype], alpha: Double) = alpha match {
-    case 0.0 => {
-      em = new EM(gens.toList, reads)
-      em.run
-    }
-    case _ => {
-      em = new EMMAP(gens.toList, reads.toList, alpha)
-      em.run
-    }
+  def runEM(gens: Iterable[Genotype], alpha: Double) = {
+    em = new EMMAP(gens.toList, reads.toList, alpha)
+    em.run
   }
 
+  def runEM(gens: Iterable[Genotype]) = {
+    em = new EM(gens.toList, reads)
+    em.run
+  }
 
   private def alleleFreqEstimation(gens: Iterable[Genotype]) = {
     val pqrs = em.eStep
@@ -148,7 +147,7 @@ object KGEM {
   private def getThreshold = {
     val n = reads.map(r => r.freq).sum
     val topBound = pValue / n
-    val p = 4 * em.eps
+    val p = em.eps
     var step = (n/2).toInt
     var x = step
     while (step > 1) {
