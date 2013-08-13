@@ -6,11 +6,25 @@
 
     <groupId>edu.gsu.cs</groupId>
     <artifactId>KGEM</artifactId>
-    <version>1.0</version>
+    <version>0.3.1</version>
     <packaging>jar</packaging>
 
     <name>KGEM</name>
-    <url>http://maven.apache.org</url>
+    <url>http://alan.cs.gsu.edu/NGS/?q=content/kgem</url>
+
+    <developers>
+        <developer>
+            <id>night_stalker</id>
+            <name>Alex Artyomenko</name>
+            <email>aartyomenko@cs.gsu.edu</email>
+        </developer>
+        <developer>
+            <id>quatro</id>
+            <name>Nicholas Mancuso</name>
+            <email>nmancuso@cs.gsu.edu</email>
+        </developer>
+    </developers>
+
     <build>
         <plugins>
             <plugin>
@@ -28,12 +42,21 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>k-gem</finalName>
+                    <!-- <finalName>k-gem</finalName> -->
                     <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
                             <mainClass>edu.gsu.cs.kgem.exec.Main</mainClass>
+                            <addDefaultImplementationEntries>
+                                true
+                            </addDefaultImplementationEntries>
                         </manifest>
+                        <manifestEntries>
+                            <mode>development</mode>
+
+                            <url>${project.url}</url>
+                            <author>Alex Artyomenko</author>
+                        </manifestEntries>
                     </archive>
                 </configuration>
                 <executions>
@@ -112,16 +135,18 @@
             <version>3.2</version>
         </dependency>
     </dependencies>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>scala-tools.org</id>
+            <name>Scala-tools Maven2 Repository</name>
+            <url>http://scala-tools.org/repo-releases</url>
+        </pluginRepository>
+    </pluginRepositories>
     <repositories>
         <repository>
             <id>biojava-maven-repo</id>
             <name>BioJava repository</name>
             <url>http://www.biojava.org/download/maven/</url>
-        </repository>
-        <repository>
-            <id>paralelj-maven-repo</id>
-            <name>ParallelJ repository</name>
-            <url>http://repo1.maven.org/maven2/org/parallelj/parallelj/</url>
         </repository>
         <repository>
             <id>scopt</id>
