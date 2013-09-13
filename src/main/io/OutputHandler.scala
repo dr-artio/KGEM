@@ -20,12 +20,9 @@ object OutputHandler {
    * @param gens
    *             Collection of haplotypes (Result)
    */
+  @deprecated
   def outputResult(out: PrintStream, gens: Iterable[Genotype]) = {
-    val gg = gens.map(g => (g.toIntegralString, g)).toMap
-    for (g <- gg) {
-      out.println(">read_freq=%.10f\n%s".format(g._2.freq, g._1))
-    }
-    out.close()
+    outputHaplotypes(out, gens)
   }
 
   /**

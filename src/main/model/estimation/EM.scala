@@ -26,7 +26,6 @@ class EM(gens: List[Genotype], reads: List[Read]) {
     })
     d
   }
-  val total = reads.map(r => r.freq).sum
 
   /**
    * Initialize h_rs in two dimensional grid of
@@ -109,7 +108,7 @@ class EM(gens: List[Genotype], reads: List[Read]) {
    */
   def mStep(pqrs: Array[Array[Double]]): Double = {
     val nfqs = Array.tabulate[Double](gens.size)((i) => {
-      rs.map(k => pqrs(i)(k) * reads(k).freq).sum / total
+      rs.map(k => pqrs(i)(k) * rFreqs(k)).sum
     })
     val change = ((for (i <- 0 until gens.size) yield Math.abs(nfqs(i) - freqs(i))) max)
     for (i <- gs) {
