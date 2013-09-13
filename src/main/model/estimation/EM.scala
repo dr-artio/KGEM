@@ -26,6 +26,7 @@ class EM(gens: List[Genotype], reads: List[Read]) {
     })
     d
   }
+  val total = reads.map(r => r.freq).sum
 
   /**
    * Initialize h_rs in two dimensional grid of

@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>edu.gsu.cs.kgem</groupId>
+    <groupId>edu.gsu.cs</groupId>
     <artifactId>kgem</artifactId>
     <version>0.3.1</version>
     <packaging>jar</packaging>
@@ -71,6 +71,7 @@
             <plugin>
                 <groupId>org.scala-tools</groupId>
                 <artifactId>maven-scala-plugin</artifactId>
+                <version>2.15.2</version>
                 <executions>
                     <execution>
                         <goals>
