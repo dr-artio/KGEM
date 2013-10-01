@@ -81,7 +81,7 @@ object OutputHandler {
 
     val faReads = reads.zipWithIndex.map( rd => {
       val seq = new DNASequence(rd._1.seq.replace(" ", "").replace("-",""))
-      seq.setOriginalHeader("read%d_%s".format(rd._2, clusteringString(ggs, pqrs, rd._2)))
+      seq.setOriginalHeader("read%d_%s %.0f".format(rd._2, clusteringString(ggs, pqrs, rd._2), rd._1.freq))
       seq
     })
 

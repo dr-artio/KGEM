@@ -4,7 +4,7 @@ import java.io.File
 import scopt.OptionParser
 
 case class Config(readsFile: File = null, k: Range.Inclusive = (50 to 50), threshold: Int = 3,
-  scoringFunc: String = "AICc", consensusFile: File = null,
+  scoringFunc: String = "AICc", consensusFile: File = null, prThr: Double = -1,
   output: File = new File("./"))
 
 
@@ -27,7 +27,10 @@ object ArgumentParser {
           " bound.")
       } text("Number of initial seeds for clustering. May be a single positive\n" +
         "\tinteger value or may be a range to try for model selection (e.g. 5:10).")
-      opt[Int]('t', "threshold") action {
+      opt[Double]('t', "frequency threshold") action {
+        (x, c) => c.copy(prThr = x)
+      } text("Frequency threshold")
+      opt[Int]('d', "threshold") action {
         (x, c) => c.copy(threshold = x)
       } validate {
         x => if (x > 0) success else failure("Threshold must be greater than 0.")

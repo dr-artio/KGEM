@@ -60,6 +60,7 @@ object KGEM {
 
   def initThreshold(tr: Double) {
     this.tr = tr
+    println("Set threshold: %f".format(tr))
   }
 
   def initThreshold = {
