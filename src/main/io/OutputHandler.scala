@@ -127,11 +127,11 @@ object OutputHandler {
 
     // Try to open output files. If they fail, return None.
     val baseName = dir.getAbsolutePath() + File.separator
-    val hapOutputName = "%s%s".format(baseName, "haplotypes.fa")
-    val cleanedHapOutputName = "%s%s".format(baseName, "haplotypes_cleaned.fa")
-    val readsOutputName = "%s%s".format(baseName, "reads.fa")
-    val cleanedReadsOutputName = "%s%s".format(baseName, "reads_cleaned.fa")
-    val readsClustered = "%s%s".format(baseName, "reads_clustered.fa")
+    val hapOutputName = "%s%s".format(baseName, "haplotypes.fas")
+    val cleanedHapOutputName = "%s%s".format(baseName, "haplotypes_cleaned.fas")
+    val readsOutputName = "%s%s".format(baseName, "reads.fas")
+    val cleanedReadsOutputName = "%s%s".format(baseName, "reads_cleaned.fas")
+    val readsClustered = "%s%s".format(baseName, "reads_clustered.fas")
 
     try {
         val hapout = new PrintStream(hapOutputName)
