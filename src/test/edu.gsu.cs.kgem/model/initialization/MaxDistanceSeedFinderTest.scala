@@ -2,6 +2,7 @@ package edu.gsu.cs.kgem.model.initialization
 
 import org.scalatest.FlatSpec
 import edu.gsu.cs.kgem.model.initialization.MaxDistanceSeedFinder._
+import Math.min
 
 /**
  *  Author: Nicholas Mancuso

@@ -4,6 +4,7 @@ import edu.gsu.cs.kgem.model.{Genotype, Read}
 import java.util.Random
 import scala.collection.mutable
 import collection.JavaConversions._
+import Math.min
 
 /**
  * Created with IntelliJ IDEA.
@@ -62,12 +63,6 @@ object MaxDistanceSeedFinder extends SeedFinder {
     candidates(rnd.nextInt(s))
   }
 
-  @inline
-  def min(i1: Double, i2: Double): Double = {
-    if (i1 < i2) return i1
-    i2
-  }
-
   /**
    * Wrapper for hamming distance between reads
    * @param r1
@@ -78,7 +73,7 @@ object MaxDistanceSeedFinder extends SeedFinder {
    * Hamming Distance between reads
    */
   @inline
-  private def hammingDistance(r1: Read, r2: Read): Double = {
+  private def hammingDistance(r1: Read, r2: Read): Int = {
     if (r1.equals(r2)) return 0
     hammingDistance(r1.seq, r2.seq)
   }
