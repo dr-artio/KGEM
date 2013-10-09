@@ -3,6 +3,7 @@ package edu.gsu.cs.kgem.model.initialization
 import edu.gsu.cs.kgem.model.{Genotype, Read}
 import java.util.Random
 import scala.collection.mutable
+import collection.JavaConversions._
 
 /**
  * Created with IntelliJ IDEA.
@@ -54,9 +55,11 @@ object MaxDistanceSeedFinder extends SeedFinder {
    * one read
    */
   private def getFirstSeed(readArr: Array[Read]) = {
-    val s = readArr.size
+    val mc = readArr.map(r => r.freq).max
+    val candidates = readArr.filter(r => r.freq == mc)
+    val s = candidates.size
     val rnd = new Random()
-    readArr(rnd.nextInt(s))
+    candidates(rnd.nextInt(s))
   }
 
   @inline
@@ -77,7 +80,7 @@ object MaxDistanceSeedFinder extends SeedFinder {
   @inline
   private def hammingDistance(r1: Read, r2: Read): Int = {
     if (r1.equals(r2)) return 0
-    hammingDistance(r1.seq, r2.seq)
+    r2.freq * r1.freq * hammingDistance(r1.seq, r2.seq)
   }
 
   /**
