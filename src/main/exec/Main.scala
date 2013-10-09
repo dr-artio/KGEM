@@ -31,7 +31,7 @@ object Main {
 
             val reads = if (config.readsFile.getName.toLowerCase.endsWith(".sam")) {
               initSAMReads(config.readsFile)
-            } else if (config.readsFile.getName.toLowerCase.endsWith(".txt")){
+            } else if (config.readsFile.getName.toLowerCase.endsWith(".txt")) {
               initTxtReads(config.readsFile)
             } else {
               initFastaReads(config.readsFile)
@@ -44,12 +44,17 @@ object Main {
 
             //get the genotypes from the best model in range or use the provided seeds
             val gens = if (config.consensusFile == null) {
-              if (config.k.length > 1) KGEM.initThreshold(0)
-              else if (config.prThr >= 0) KGEM.initThreshold(config.prThr)
-              else KGEM.initThreshold
-
-              val selector = new ModelSelector(config.k, scoreFunc, MaxDistanceSeedFinder)
-              selector.selectModel(reads.toList, config.threshold, alpha)
+              if (config.clustering) {
+                val k = config.k.head
+                val seeds = MaxDistanceSeedFinder.findSeeds(reads.toList, 2 * k, 3)
+                KGEM.runCl(seeds, k, alpha)
+              } else {
+                if (config.k.length > 1) KGEM.initThreshold(0)
+                else if (config.prThr >= 0) KGEM.initThreshold(config.prThr)
+                else KGEM.initThreshold
+                val selector = new ModelSelector(config.k, scoreFunc, MaxDistanceSeedFinder)
+                selector.selectModel(reads.toList, config.threshold, alpha)
+              }
             } else {
               val seeds = initFastaReads(config.consensusFile).map(r => new Genotype(r.seq))
               KGEM.run(seeds, alpha)

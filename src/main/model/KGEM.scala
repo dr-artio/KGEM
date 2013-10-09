@@ -58,6 +58,16 @@ object KGEM {
     collapse
   }
 
+  def runCl(gens: Iterable[Genotype], k: Int, alpha: Double = 0) = {
+    var clusters = run(gens, alpha)
+    do {
+      val m = clusters.map(g => g.freq).min
+      clusters = clusters.filter(g => g.freq > m)
+      clusters = run(clusters, alpha)
+    } while (clusters.size > k)
+    clusters
+  }
+
   def initThreshold(tr: Double) {
     this.tr = tr
     println("Set threshold: %f".format(tr))
