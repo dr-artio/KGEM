@@ -43,7 +43,7 @@ object MaxDistanceSeedFinder extends SeedFinder {
       seeds += cur._1
       distanceMap = distanceMap.map(e => (e._1, min(e._2, hammingDistance(cur._1, e._1))))
     }
-    println("Final max HD: %d".format(maxHD))
+    println("Final max HD: %.0f".format(maxHD))
     return seeds.map(r => new Genotype(r.seq))
   }
 
