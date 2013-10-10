@@ -79,15 +79,29 @@ object OutputHandler {
   def outputClusteredFasta(out: PrintStream, gens: Iterable[Genotype], reads: Iterable[Read], pqrs: Array[Array[Double]]) = {
     val ggs = gens.zipWithIndex
 
-    val faReads = reads.zipWithIndex.map( rd => {
-      val seq = new DNASequence(rd._1.seq.replace(" ", "").replace("-",""))
-      seq.setOriginalHeader("read%d_%s %.0f".format(rd._2, clusteringString(ggs, pqrs, rd._2), rd._1.freq))
-      seq
-    })
+    val fReads = reads.zipWithIndex.groupBy(rd =>  {
+      val cl = column(pqrs, rd._2)
+      cl.indexWhere(p => p == cl.max)
+    }).map(rd => {
+      rd._2.map(r => {
+        val seq = new DNASequence(r._1.seq.replace(" ", "").replace("-",""))
+        seq.setOriginalHeader("h%d_read%d %.0f".format(rd._1, r._2, r._1.freq))
+        seq
+      })
+    }).flatten
 
-    writeFasta(out, faReads)
+//    val faReads = reads.zipWithIndex.map( rd => {
+//      val seq = new DNASequence(rd._1.seq.replace(" ", "").replace("-",""))
+//      seq.setOriginalHeader("read%d_%s %.0f".format(rd._2, clusteringString(ggs, pqrs, rd._2), rd._1.freq))
+//      seq
+//    })
+
+    writeFasta(out, fReads)
   }
 
+  def column[A, M[_]](matrix: M[M[A]], colIdx: Int)
+                     (implicit v1: M[M[A]] => Seq[M[A]], v2: M[A] => Seq[A]): Seq[A] =
+    matrix.map(_(colIdx))
 
   private def writeFasta(out: PrintStream, seq: Iterable[DNASequence]) {
     try {

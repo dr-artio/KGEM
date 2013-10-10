@@ -1,9 +1,11 @@
 package edu.gsu.cs.kgem.model
 
 import collection.mutable
+import edu.gsu.cs.kgem.model.initialization.MaxDistanceSeedFinder
 import util.Random
 import org.apache.commons.math3.distribution.BinomialDistribution
 import edu.gsu.cs.kgem.model.estimation.{EMMAP, EM}
+import scala.collection.mutable.ListBuffer
 
 /**
  * Created with IntelliJ IDEA.
@@ -60,12 +62,26 @@ object KGEM {
 
   def runCl(gens: Iterable[Genotype], k: Int, alpha: Double = 0) = {
     var clusters = run(gens, alpha)
+
     do {
-      val m = clusters.map(g => g.freq).min
-      clusters = clusters.filter(g => g.freq > m)
+      val bg = getBadGenotype(clusters)
+      clusters = clusters.filter(c => c != bg)
       clusters = run(clusters, alpha)
     } while (clusters.size > k)
     clusters
+  }
+
+  def getBadGenotype(gens: Iterable[Genotype]) = {
+    val pairs = new ListBuffer[(Genotype, Genotype)]()
+    var gg = gens
+    while(!gg.tail.isEmpty){
+      pairs ++= gg.tail.map(g => (gg.head, g))
+      gg = gg.tail
+    }
+    val pair = pairs.toList.minBy(p =>
+      MaxDistanceSeedFinder.hammingDistance(p._1.toIntegralString, p._2.toIntegralString))
+    if (pair._1.freq > pair._2.freq) pair._2
+    else pair._1
   }
 
   def initThreshold(tr: Double) {
