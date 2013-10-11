@@ -84,7 +84,8 @@ object OutputHandler {
       cl.indexWhere(p => p == cl.max)
     }).map(rd => {
       rd._2.map(r => {
-        val seq = new DNASequence(r._1.seq.replace(" ", "").replace("-",""))
+        val s = trim(r._1.seq.trim, 'N').replace("-","")
+        val seq = new DNASequence(s)
         seq.setOriginalHeader("h%d_read%d %.0f".format(rd._1, r._2, r._1.freq))
         seq
       })
@@ -99,7 +100,11 @@ object OutputHandler {
     writeFasta(out, fReads)
   }
 
-  def column[A, M[_]](matrix: M[M[A]], colIdx: Int)
+  private def trim(str: String, char: Char): String = {
+    str.dropWhile(c => c == char).reverse.dropWhile(c => c == char).reverse
+  }
+
+  private def column[A, M[_]](matrix: M[M[A]], colIdx: Int)
                      (implicit v1: M[M[A]] => Seq[M[A]], v2: M[A] => Seq[A]): Seq[A] =
     matrix.map(_(colIdx))
 
