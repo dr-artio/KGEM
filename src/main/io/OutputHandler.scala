@@ -83,6 +83,7 @@ object OutputHandler {
       val cl = column(pqrs, rd._2)
       cl.indexWhere(p => p == cl.max)
     }).map(rd => {
+      println(rd._2.size)
       rd._2.map(r => {
         val s = trim(r._1.seq.trim, 'N').replace("-","")
         val seq = new DNASequence(s)
