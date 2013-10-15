@@ -87,7 +87,7 @@ object OutputHandler {
       rd._2.map(r => {
         val s = trim(r._1.seq.trim, 'N').replace("-","")
         val seq = new DNASequence(s)
-        seq.setOriginalHeader("h%d_read%d %.0f".format(rd._1, r._2, r._1.freq))
+        seq.setOriginalHeader("h%d_read%d_%.0f".format(rd._1, r._2, r._1.freq))
         seq
       })
     }).flatten
