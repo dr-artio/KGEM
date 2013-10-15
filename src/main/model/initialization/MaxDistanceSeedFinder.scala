@@ -75,7 +75,7 @@ object MaxDistanceSeedFinder extends SeedFinder {
   @inline
   private def hammingDistance(r1: Read, r2: Read): Int = {
     if (r1.equals(r2)) return 0
-    hammingDistance(r1.seq, r2.seq)
+    r2.freq.toInt * hammingDistance(r1.seq, r2.seq)
   }
 
   /**
