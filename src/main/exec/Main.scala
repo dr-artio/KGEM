@@ -46,7 +46,7 @@ object Main {
             val gens = if (config.consensusFile == null) {
               if (config.clustering) {
                 val k = config.k.head
-                val seeds = MaxDistanceSeedFinder.findSeeds(reads.toList, 2*k, 3)
+                val seeds = MaxDistanceSeedFinder.findSeeds(reads.toList, k+1, 3)
                 KGEM.runCl(seeds, k, alpha)
               } else {
                 if (config.k.length > 1) KGEM.initThreshold(0)

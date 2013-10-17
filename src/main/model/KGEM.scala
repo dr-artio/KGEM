@@ -74,12 +74,19 @@ object KGEM {
   def getBadGenotype(gens: Iterable[Genotype]) = {
     val pairs = new ListBuffer[(Genotype, Genotype)]()
     var gg = gens
+    println("------")
     while(!gg.tail.isEmpty){
       pairs ++= gg.tail.map(g => (gg.head, g))
       gg = gg.tail
+      println(gg.tail.size)
+      println(gg.head.ID)
     }
-    val pair = pairs.toList.minBy(p =>
-      MaxDistanceSeedFinder.hammingDistance(p._1.toIntegralString, p._2.toIntegralString))
+    println(pairs.size)
+    val pair = pairs.toList.minBy(p => {
+      val d = MaxDistanceSeedFinder.hammingDistance(p._1.toIntegralString, p._2.toIntegralString)*Math.sqrt(p._1.freq * p._2.freq)
+      println("%.5f %d %d".format(d, p._1.ID, p._2.ID))
+      d
+    })
     if (pair._1.freq > pair._2.freq) pair._2
     else pair._1
   }

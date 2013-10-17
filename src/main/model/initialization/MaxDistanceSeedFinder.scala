@@ -98,7 +98,7 @@ object MaxDistanceSeedFinder extends SeedFinder {
     }
     var r = 0
     for (i <- 0 until l) {
-      if (s(i) != t(i) && s(i) != ' ' && t(i) != ' ' && t(i) != '-' && s(i) != '-') {
+      if (s(i) != t(i) && s(i) != 'N' && t(i) != 'N' && t(i) != ' ' && s(i) != ' ') {
         r += 1
       }
     }
