@@ -8,6 +8,7 @@ import net.sf.samtools.{SAMFileHeader, SAMRecord}
 import org.biojava3.core.sequence.io.FastaReaderHelper.readFastaDNASequence
 import collection.JavaConversions._
 import scala.io.Source.fromFile
+import org.biojava3.core.sequence.DNASequence
 
 /**
  * Created with IntelliJ IDEA.
@@ -31,8 +32,8 @@ package object exec {
     var extSAMRecords = samRecords.map(s => SAMParser.toExtendedString(s))
     val l = extSAMRecords.map(s => s.length).max
     extSAMRecords = samRecords.map(s => SAMParser.toExtendedString(s, l))
-    val readsMap = toCounterMap(extSAMRecords.iterator)
     val samMap = samRecords.map(s => (SAMParser.toExtendedString(s, l), s)).toMap
+    val readsMap = flip(samMap.map(s => (s._2.getReadName, s._1)).toMap)
     val reads = toReads(samMap)
     initReadFreqs(reads, readsMap)
     reads
@@ -48,11 +49,10 @@ package object exec {
    */
   def initFastaReads(fl: File): Iterable[Read] = {
     val seqs = readFastaDNASequence(fl)
-    val lines = seqs.values.map(s => s.toString).iterator
-    val readsMap = toCounterMap(lines)
-    val samRecords = toSAMRecords(readsMap.keys)
+    val readsMap = flip(seqs.toMap)
+    val samRecords = toSAMRecords(readsMap)
     val reads = toReads(samRecords)
-    initReadFreqs(reads, readsMap)
+    initReadFreqs(reads, readsMap.map(entry => (entry._1.getSequenceAsString, entry._2)).toMap)
     reads
   }
 
@@ -69,26 +69,11 @@ package object exec {
    */
   def initTxtReads(fl: File): Iterable[Read] = {
     val lines = fromFile(fl).getLines
-    val readsMap = toCounterMap(lines)
-    val samRecords = toSAMRecords(readsMap.keys)
+    val readsMap = flip(lines.zipWithIndex.map(s => ("Read"+s._2, new DNASequence(s._1))).toMap)
+    val samRecords = toSAMRecords(readsMap)
     val reads = toReads(samRecords)
-    initReadFreqs(reads, readsMap)
+    initReadFreqs(reads, readsMap.map(entry => (entry._1.getSequenceAsString, entry._2)).toMap)
     reads
-  }
-
-  /**
-   * Read file with consensus sequence and wrap it into
-   * Read object
-   * @param cfl
-   * File with consensus
-   * @return
-   * Read object or Nil if not present
-   */
-  def readDataAndInitialSeqs(cfl: File): Iterable[Read] = {
-    if (cfl == null) return null
-    val consensus = readFastaDNASequence(cfl)
-    return for (entry <- consensus)
-    yield new Read(toSAMRecord(entry._2.toString))
   }
 
   /**
@@ -98,9 +83,10 @@ package object exec {
    * @param readsMap
    * Counter Map
    */
-  private def initReadFreqs(reads: Iterable[Read], readsMap: mutable.Map[String, Int]) {
+  private def initReadFreqs(reads: Iterable[Read], readsMap: Map[String, Set[String]]) {
     reads foreach (r => {
-      r.freq = readsMap(r.seq)
+      r.freq = readsMap(r.seq).size;
+      r.ids = readsMap(r.seq)
     })
   }
 
@@ -152,6 +138,21 @@ package object exec {
   }
 
   /**
+   * Flip map into mulimap
+   * Map[X, Y] => Map[ Y, Set[X] ]
+   * @param m
+   *          Input Map[X, Y]
+   * @tparam X
+   *           Type of Key
+   * @tparam Y
+   *           Type of Value
+   * @return
+   *         Map[ Y, Set[X] ]
+   */
+  def flip[X, Y](m: Map[X, Y]): Map[Y, Set[X]] =
+    m.groupBy(_._2).mapValues(_.map(_._1).toSet)
+
+  /**
    * Deserialize SAMRecords from strings
    * @param reads
    * Reads in strings
@@ -159,7 +160,7 @@ package object exec {
    * SAMRecords collection
    */
   @deprecated
-  private def toSAMRecords(reads: Iterable[String]) = {
+  private def toSAMRecords(reads: Map[DNASequence, Set[String]]) = {
     for (r <- reads)
     yield toSAMRecord(r)
   }
@@ -172,10 +173,10 @@ package object exec {
    *         Wrapped {@see SAMRecord} object
    */
   @deprecated
-  private def toSAMRecord(st: String) = {
+  private def toSAMRecord(st: (DNASequence, Set[String])) = {
     val sam = new SAMRecord(new SAMFileHeader)
     sam.setAlignmentStart(1)
-    sam.setReadString(st)
+    sam.setReadString(st._1.getSequenceAsString)
     sam
   }
 }

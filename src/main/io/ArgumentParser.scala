@@ -4,7 +4,7 @@ import java.io.File
 import scopt.OptionParser
 
 case class Config(readsFile: File = null, k: Range.Inclusive = (50 to 50), threshold: Int = 3,
-  scoringFunc: String = "AICc", consensusFile: File = null, prThr: Double = -1, clustering: Boolean = false,
+  scoringFunc: String = "AICc", consensusFile: File = null, prThr: Double = -1, clustering: File = null,
   output: File = new File("./"))
 
 
@@ -53,7 +53,7 @@ object ArgumentParser {
       opt[File]('o', "output-dir") action {
         (x, c) => c.copy(output = x)
       } text("Directory to output results.")
-      opt[Unit]('c',"clustering") action { (x, c) => c.copy(clustering = true)}
+      opt[File]('c',"clustering") action { (x, c) => c.copy(clustering = x)}
       opt[Unit]('h', "help") action { (x, c) => showUsage; sys.exit(0) } text("Prints this help text.")
       opt[Unit]('v', "version") action { (x, c) => showHeader; sys.exit(0) } text("Prints kGEM version.")
       }

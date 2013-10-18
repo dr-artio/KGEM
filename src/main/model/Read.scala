@@ -15,6 +15,7 @@ class Read(rc: SAMRecord) {
   val seq = rc.getReadString
   val len = rc.getReadLength
   val end = beg + len
+  var ids:Set[String] = null
 
   override def equals(obj: Any) = {
     if (obj.isInstanceOf[Read]) {

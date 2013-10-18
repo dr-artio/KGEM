@@ -3,7 +3,7 @@ package edu.gsu.cs.kgem.io
 import edu.gsu.cs.kgem.model.{Genotype, Read}
 import java.io.{File, PrintStream}
 import org.biojava3.core.sequence.DNASequence
-import org.biojava3.core.sequence.io.FastaWriterHelper
+import org.biojava3.core.sequence.io.{FastaReaderHelper, FastaWriterHelper}
 import collection.JavaConversions._
 
 /**
@@ -76,21 +76,25 @@ object OutputHandler {
    * @param pqrs
    *             Clustering coefficients
    */
-  def outputClusteredFasta(out: PrintStream, gens: Iterable[Genotype], reads: Iterable[Read], pqrs: Array[Array[Double]]) = {
-    val ggs = gens.zipWithIndex
+  def outputClusteredFasta(out: PrintStream, gens: Iterable[Genotype], reads: Iterable[Read],
+                           pqrs: Array[Array[Double]], readsFile: File) = {
+    val rs = FastaReaderHelper.readFastaDNASequence(readsFile)
 
     val fReads = reads.zipWithIndex.groupBy(rd =>  {
       val cl = column(pqrs, rd._2)
       cl.indexWhere(p => p == cl.max)
     }).map(rd => {
-      println(rd._2.size)
       rd._2.map(r => {
-        val s = trim(r._1.seq.trim, 'N').replace("-","")
-        val seq = new DNASequence(s)
-        seq.setOriginalHeader("h%d_read%d_%.0f".format(rd._1, r._2, r._1.freq))
-        seq
+//        r._1.ids.map(id => {
+//          val ds = rs(id)
+//          ds.setOriginalHeader("h%d_%s".format(rd._1, ds.getOriginalHeader))
+//          ds
+//        })
+        val ds = rs(r._1.ids.head)
+        ds.setOriginalHeader("h%d_%s_%d".format(rd._1, ds.getOriginalHeader, r._1.ids.size))
+        ds
       })
-    }).flatten
+    }).flatten//.flatten
 
 //    val faReads = reads.zipWithIndex.map( rd => {
 //      val seq = new DNASequence(rd._1.seq.replace(" ", "").replace("-",""))

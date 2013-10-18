@@ -44,9 +44,9 @@ object Main {
 
             //get the genotypes from the best model in range or use the provided seeds
             val gens = if (config.consensusFile == null) {
-              if (config.clustering) {
+              if (config.clustering != null) {
                 val k = config.k.head
-                val seeds = MaxDistanceSeedFinder.findSeeds(reads.toList, k+1, 3)
+                val seeds = MaxDistanceSeedFinder.findSeeds(reads.toList, k + 1, 3)
                 KGEM.runCl(seeds, k, alpha)
               } else {
                 if (config.k.length > 1) KGEM.initThreshold(0)
@@ -66,9 +66,10 @@ object Main {
             outputHaplotypes(hapcl, gens, s => s.replaceAll("-", ""))
             outputResult(res, gens, n)
             outputResult(rescl, gens, n, s => s.replaceAll("-", ""))
-            val pqrs = KGEM.getPqrs
-            outputClusteredFasta(rclust, gens, KGEM.getReads, pqrs)
-
+            if (config.clustering != null) {
+              val pqrs = KGEM.getPqrs
+              outputClusteredFasta(rclust, gens, KGEM.getReads, pqrs, config.clustering)
+            }
             println(("The whole procedure took %.2f minutes\n" +
               "Total number of haplotypes is %d \nbye bye").format(
               ((System.currentTimeMillis - s) * 0.0001 / 6), gens.size))
