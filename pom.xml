@@ -6,7 +6,7 @@
 
     <groupId>edu.gsu.cs</groupId>
     <artifactId>kgem</artifactId>
-    <version>0.3.1</version>
+    <version>0.4</version>
     <packaging>jar</packaging>
 
     <name>KGEM</name>
@@ -167,6 +167,11 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
             <version>3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.1</version>
         </dependency>
     </dependencies>
     <pluginRepositories>

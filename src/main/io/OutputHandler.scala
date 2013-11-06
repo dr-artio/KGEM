@@ -1,10 +1,12 @@
 package edu.gsu.cs.kgem.io
 
 import edu.gsu.cs.kgem.model.{Genotype, Read}
+import edu.gsu.cs.kgem.model.initialization.MaxDistanceSeedFinder.hammingDistance
 import java.io.{File, PrintStream}
 import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.{FastaReaderHelper, FastaWriterHelper}
 import collection.JavaConversions._
+import org.apache.commons.lang3.StringUtils.getLevenshteinDistance
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,6 +15,9 @@ import collection.JavaConversions._
  * Time: 3:23 PM
  */
 object OutputHandler {
+
+  val UNCLUSTERED = -1
+
   /**
    * Output corrected reads into specified {@see PrintStream}
    * @param out
@@ -79,28 +84,33 @@ object OutputHandler {
   def outputClusteredFasta(out: PrintStream, gens: Iterable[Genotype], reads: Iterable[Read],
                            pqrs: Array[Array[Double]], readsFile: File) = {
     val rs = FastaReaderHelper.readFastaDNASequence(readsFile)
+    val genSeqs = gens.map(g => (g, g.toIntegralString.replaceAll("-",""))).toList
 
-    val fReads = reads.zipWithIndex.groupBy(rd =>  {
+    val groups = reads.zipWithIndex.groupBy(rd => {
       val cl = column(pqrs, rd._2)
-      cl.indexWhere(p => p == cl.max)
-    }).map(rd => {
+      if (cl.max < 1e-20) {
+        UNCLUSTERED
+      } else {
+        val index = cl.indexWhere(p => p == cl.max)
+        genSeqs(index)._1.ID
+      }
+    }).toMap
+
+    val searchGroups = groups.-(UNCLUSTERED)
+    val uncl = groups.get(UNCLUSTERED).head.groupBy(r =>
+        (searchGroups.minBy(g => g._2.map(rr =>
+        getLevenshteinDistance(
+          rs(rr._1.ids.head).getSequenceAsString,
+          rs(r._1.ids.head).getSequenceAsString
+        )).min)._1)).toMap
+
+    val fReads = merge(searchGroups, uncl).map(rd => {
       rd._2.map(r => {
-//        r._1.ids.map(id => {
-//          val ds = rs(id)
-//          ds.setOriginalHeader("h%d_%s".format(rd._1, ds.getOriginalHeader))
-//          ds
-//        })
         val ds = rs(r._1.ids.head)
         ds.setOriginalHeader("h%d_%s_%d".format(rd._1, ds.getOriginalHeader, r._1.ids.size))
         ds
       })
-    }).flatten//.flatten
-
-//    val faReads = reads.zipWithIndex.map( rd => {
-//      val seq = new DNASequence(rd._1.seq.replace(" ", "").replace("-",""))
-//      seq.setOriginalHeader("read%d_%s %.0f".format(rd._2, clusteringString(ggs, pqrs, rd._2), rd._1.freq))
-//      seq
-//    })
+    }).flatten
 
     writeFasta(out, fReads)
   }
@@ -124,7 +134,7 @@ object OutputHandler {
   private def clusteringString(ggs: Iterable[(Genotype, Int)], pqrs: Array[Array[Double]], readIndex: Int) = {
     val sb = new StringBuffer()
     for (g <- ggs) {
-      sb.append("_h%d=%.5f".format(g._1.ID, pqrs(g._2)(readIndex)))
+      sb.append("_h%d=%s".format(g._1.ID, pqrs(g._2)(readIndex).toString))
     }
     sb.toString
   }
@@ -183,5 +193,30 @@ object OutputHandler {
     } catch {
       case _: Throwable => println("Cannot create file: " + hapOutputName); return None
     }
+  }
+
+  /**
+   * Merge two maps with collections as
+   * values. Result map will contain union
+   * of keys as new keyset and joint lists of
+   * values
+   * @param m1
+   *           Operand 1
+   * @param m2
+   *           Operand 2
+   * @tparam K
+   *           Generic parameter type of Key
+   * @tparam V
+   *           Generic parameter type of Value
+   * @return
+   */
+  def merge[K,V](m1: Map[K,Iterable[V]], m2: Map[K,Iterable[V]]): Map[K,Iterable[V]] = {
+    val k1 = Set(m1.keysIterator.toList: _*)
+    val k2 = Set(m2.keysIterator.toList: _*)
+    val intersection = k1 & k2
+
+    val r1 = for(key <- intersection) yield (key -> (m1(key) ++ m2(key)))
+    val r2 = m1.filterKeys(!intersection.contains(_)) ++ m2.filterKeys(!intersection.contains(_))
+    r2 ++ r1
   }
 }

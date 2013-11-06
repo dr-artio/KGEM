@@ -62,12 +62,12 @@ object KGEM {
 
   def runCl(gens: Iterable[Genotype], k: Int, alpha: Double = 0) = {
     var clusters = run(gens, alpha)
-
-    do {
-      val bg = getBadGenotype(clusters)
-      clusters = clusters.filter(c => c != bg)
-      clusters = run(clusters, alpha)
-    } while (clusters.size > k)
+    if (clusters.size > k)
+      do {
+        val bg = getBadGenotype(clusters)
+        clusters = clusters.filter(c => c != bg)
+        clusters = run(clusters, alpha)
+      }   while (clusters.size > k)
     clusters
   }
 
@@ -241,7 +241,7 @@ object KGEM {
    *         Matrix with P_qr 's
    */
   def getPqrs = {
-    em.eStep
+    em.h_rs
   }
 
   def getReads = {

@@ -49,10 +49,11 @@ package object exec {
    */
   def initFastaReads(fl: File): Iterable[Read] = {
     val seqs = readFastaDNASequence(fl)
-    val readsMap = flip(seqs.toMap)
+    val readsMap = flip(seqs.map(en => (en._1, en._2.getSequenceAsString)).toMap)
     val samRecords = toSAMRecords(readsMap)
     val reads = toReads(samRecords)
-    initReadFreqs(reads, readsMap.map(entry => (entry._1.getSequenceAsString, entry._2)).toMap)
+    initReadFreqs(reads, readsMap)
+    println(reads.size)
     reads
   }
 
@@ -69,10 +70,10 @@ package object exec {
    */
   def initTxtReads(fl: File): Iterable[Read] = {
     val lines = fromFile(fl).getLines
-    val readsMap = flip(lines.zipWithIndex.map(s => ("Read"+s._2, new DNASequence(s._1))).toMap)
+    val readsMap = flip(lines.zipWithIndex.map(s => ("Read"+s._2, s._1)).toMap)
     val samRecords = toSAMRecords(readsMap)
     val reads = toReads(samRecords)
-    initReadFreqs(reads, readsMap.map(entry => (entry._1.getSequenceAsString, entry._2)).toMap)
+    initReadFreqs(reads, readsMap.map(entry => (entry._1, entry._2)).toMap)
     reads
   }
 
@@ -160,7 +161,7 @@ package object exec {
    * SAMRecords collection
    */
   @deprecated
-  private def toSAMRecords(reads: Map[DNASequence, Set[String]]) = {
+  private def toSAMRecords(reads: Map[String, Set[String]]) = {
     for (r <- reads)
     yield toSAMRecord(r)
   }
@@ -173,10 +174,10 @@ package object exec {
    *         Wrapped {@see SAMRecord} object
    */
   @deprecated
-  private def toSAMRecord(st: (DNASequence, Set[String])) = {
+  private def toSAMRecord(st: (String, Set[String])) = {
     val sam = new SAMRecord(new SAMFileHeader)
     sam.setAlignmentStart(1)
-    sam.setReadString(st._1.getSequenceAsString)
+    sam.setReadString(st._1)
     sam
   }
 }

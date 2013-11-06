@@ -94,7 +94,7 @@ object MaxDistanceSeedFinder extends SeedFinder {
   def hammingDistance(s: String, t: String): Int = {
     val l = s.length
     if (l != t.length) {
-      throw new IllegalArgumentException("Hamming Distance: Strings have different length")
+      throw new IllegalArgumentException("Hamming Distance: Strings have different lengths")
     }
     var r = 0
     for (i <- 0 until l) {
