@@ -86,28 +86,18 @@ object OutputHandler {
     val rs = FastaReaderHelper.readFastaDNASequence(readsFile)
     val genSeqs = gens.map(g => (g, g.toIntegralString.replaceAll("-",""))).toList
 
+    println(gens.map(g => g.ID))
+
     val groups = reads.zipWithIndex.groupBy(rd => {
       val cl = column(pqrs, rd._2)
-      if (cl.max < 1e-20) {
-        UNCLUSTERED
-      } else {
-        val index = cl.indexWhere(p => p == cl.max)
-        genSeqs(index)._1.ID
-      }
+      val index = cl.indexWhere(p => p == cl.max)
+      genSeqs(index)._1
     }).toMap
 
-    val searchGroups = groups.-(UNCLUSTERED)
-    val uncl = groups.get(UNCLUSTERED).head.groupBy(r =>
-        (searchGroups.minBy(g => g._2.map(rr =>
-        getLevenshteinDistance(
-          rs(rr._1.ids.head).getSequenceAsString,
-          rs(r._1.ids.head).getSequenceAsString
-        )).min)._1)).toMap
-
-    val fReads = merge(searchGroups, uncl).map(rd => {
+    val fReads = groups.map(rd => {
       rd._2.map(r => {
         val ds = rs(r._1.ids.head)
-        ds.setOriginalHeader("h%d_%s_%d".format(rd._1, ds.getOriginalHeader, r._1.ids.size))
+        ds.setOriginalHeader("h%d_%s_%d".format(rd._1.ID, ds.getOriginalHeader, r._1.ids.size))
         ds
       })
     }).flatten
