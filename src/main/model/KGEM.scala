@@ -67,7 +67,7 @@ object KGEM {
         val bg = getBadGenotype(clusters)
         clusters = clusters.filter(c => c != bg)
         clusters = run(clusters, alpha)
-      }   while (clusters.size > k)
+      } while (clusters.size > k)
     clusters
   }
 
@@ -128,6 +128,7 @@ object KGEM {
       println("KGEM iteration #%d done in %.2f minutes".format(i, ((System.currentTimeMillis - st) * 1.0 / 60000)))
       i += 1
     }
+    for (g <- gens) g.sqNormalize
   }
 
   private def rounding(gens: Iterable[Genotype]) = {
@@ -150,7 +151,7 @@ object KGEM {
   }
 
   private def doAlleleFreqEstimation(g: Genotype, pqs: Array[Double]): Unit = {
-    if (g.convergen) return
+   // if (g.convergen) return
     val prev = g.toIntegralString
     for (e <- g.data.zipWithIndex.par) {
       for (v <- e._1.keys) e._1(v) = 0
@@ -240,8 +241,8 @@ object KGEM {
    * @return
    *         Matrix with P_qr 's
    */
-  def getPqrs = {
-    em.h_rs
+  def getPqrs(gens: Iterable[Genotype]) = {
+    new EM(gens.toList, reads).h_rs
   }
 
   def getReads = {

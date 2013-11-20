@@ -46,7 +46,7 @@ object Main {
             val gens = if (config.consensusFile == null) {
               if (config.clustering != null) {
                 val k = config.k.head
-                val seeds = MaxDistanceSeedFinder.findSeeds(reads.toList, k + 1, 3)
+                val seeds = MaxDistanceSeedFinder.findSeeds(reads.toList, k, 3)
                 KGEM.runCl(seeds, k, alpha)
               } else {
                 if (config.k.length > 1) KGEM.initThreshold(0)
@@ -67,7 +67,7 @@ object Main {
             outputResult(res, gens, n)
             outputResult(rescl, gens, n, s => s.replaceAll("-", ""))
             if (config.clustering != null) {
-              val pqrs = KGEM.getPqrs
+              val pqrs = KGEM.getPqrs(gens)
               outputClusteredFasta(rclust, gens, KGEM.getReads, pqrs, config.clustering)
             }
             println(("The whole procedure took %.2f minutes\n" +

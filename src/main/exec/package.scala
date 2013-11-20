@@ -53,7 +53,7 @@ package object exec {
     val samRecords = toSAMRecords(readsMap)
     val reads = toReads(samRecords)
     initReadFreqs(reads, readsMap)
-    println(reads.size)
+    println("Number of distinct reads: %d".format(reads.size))
     reads
   }
 

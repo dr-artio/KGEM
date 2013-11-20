@@ -7,6 +7,7 @@ import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.{FastaReaderHelper, FastaWriterHelper}
 import collection.JavaConversions._
 import org.apache.commons.lang3.StringUtils.getLevenshteinDistance
+import scala.math.Ordered.orderingToOrdered
 
 /**
  * Created with IntelliJ IDEA.
@@ -84,9 +85,7 @@ object OutputHandler {
   def outputClusteredFasta(out: PrintStream, gens: Iterable[Genotype], reads: Iterable[Read],
                            pqrs: Array[Array[Double]], readsFile: File) = {
     val rs = FastaReaderHelper.readFastaDNASequence(readsFile)
-    val genSeqs = gens.map(g => (g, g.toIntegralString.replaceAll("-",""))).toList
-
-    println(gens.map(g => g.ID))
+    val genSeqs = gens.map(g => (g, g.toIntegralString.replaceAll("-", "").replaceAll("N", ""))).toList
 
     val groups = reads.zipWithIndex.groupBy(rd => {
       val cl = column(pqrs, rd._2)
@@ -94,7 +93,51 @@ object OutputHandler {
       genSeqs(index)._1
     }).toMap
 
-    val fReads = groups.map(rd => {
+    val dsThresholds = groups.map(g => {
+      def readSeq(r: Read) = rs(r.ids.head).getSequenceAsString
+      val genSeq = genSeqs.find(_._1 == g._1).head._2
+      val dses = g._2.map(r => getLevenshteinDistance(readSeq(r._1), genSeq))
+      val threshold = mean(dses) + 3*sigma(dses)
+      (g._1, threshold)
+    }).toMap
+
+    val bReads = groups.map(g => {
+      val threshold = dsThresholds(g._1)
+      def readSeq(r: Read) = rs(r.ids.head).getSequenceAsString
+      val genSeq = genSeqs.find(_._1 == g._1).head._2
+      g._2.filter(r => getLevenshteinDistance(readSeq(r._1), genSeq) >= threshold)
+    }).flatten
+
+    val gbReads = bReads.map(r => {
+      def readSeq(r: Read) = rs(r.ids.head).getSequenceAsString
+      val genOp =  genSeqs.find(g => getLevenshteinDistance(g._2, readSeq(r._1)) < dsThresholds(g._1))
+      if (genOp.size == 1)
+        (r, genOp.head._1)
+      else
+        (r, null)
+//      println(r._1.ids.head)
+//      println(groups.map(g => g._2.filter(_ != r).map(rr =>
+//        (g._1.ID, getLevenshteinDistance(rs(rr._1.ids.head).getSequenceAsString, rs(r._1.ids.head).getSequenceAsString))
+//      ).min))
+//      println(gens.map(g => (dsTresholds(g),
+//        getLevenshteinDistance(rs(r._1.ids.head).getSequenceAsString, g.toIntegralString.replaceAll("-","").replaceAll("N", "")),
+//        groups(g).size,
+//        hammingDistance(r._1.seq, g.toIntegralString))))
+//      println(column(pqrs, r._2))
+//      (r, gens.minBy(g => getLevenshteinDistance(r._1.seq.replaceAll("-",""), g.toIntegralString.replaceAll("-",""))/ dsTresholds(g)))
+    }).toMap
+
+    val ngReads = reads.zipWithIndex.filter(x => !gbReads.contains(x) || gbReads(x) != null).groupBy(rd => {
+      if (gbReads.contains(rd)) {
+        gbReads(rd)
+      } else {
+        val cl = column(pqrs, rd._2)
+        val index = cl.indexWhere(p => p == cl.max)
+        genSeqs(index)._1
+      }
+    }).toMap
+
+    val fReads = ngReads.map(rd => {
       rd._2.map(r => {
         val ds = rs(r._1.ids.head)
         ds.setOriginalHeader("h%d_%s_%d".format(rd._1.ID, ds.getOriginalHeader, r._1.ids.size))
@@ -208,5 +251,15 @@ object OutputHandler {
     val r1 = for(key <- intersection) yield (key -> (m1(key) ++ m2(key)))
     val r2 = m1.filterKeys(!intersection.contains(_)) ++ m2.filterKeys(!intersection.contains(_))
     r2 ++ r1
+  }
+
+  def mean[T <% Double](vals: Iterable[T]) = {
+    val N = vals.size
+    vals.map(_.toDouble).sum / N
+  }
+
+  def sigma[T <% Double](vals: Iterable[T]) = {
+    val meanValue = mean(vals)
+    Math.sqrt(mean(vals.map(x => Math.pow(x - meanValue, 2))))
   }
 }
