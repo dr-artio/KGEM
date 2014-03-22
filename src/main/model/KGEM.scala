@@ -15,12 +15,12 @@ import scala.collection.mutable.ListBuffer
  * To change this template use File | Settings | File Templates.
  */
 object KGEM {
-  private var reads: List[Read] = List[Read]()
-  private var zreads = reads.zipWithIndex
-  private var em = new EM(List[Genotype](), List[Read]())
+  private var reads: List[Read] = null
+  private var zreads: List[(Read, Int)] = null
+  private var em: EM = null
   private var tr = 0.0005
   private val pValue = 0.05
-  var table = new mutable.MutableList[Map[String, Iterable[(Read, Int)]]]()
+  var table: mutable.MutableList[Map[String, Iterable[(Read, Int)]]] = null
   var loglikelihood = 0.0
   var maximumAP = 0.0
 
@@ -32,6 +32,7 @@ object KGEM {
   def initReads(reads: List[Read]) = {
     this.reads = reads
     zreads = reads.zipWithIndex
+    this.table = new mutable.MutableList[Map[String, Iterable[(Read, Int)]]]()
     val ml = reads.map(r => r.end).max
     var i = 0
     val nucls = Genotype.sMap.keys
@@ -65,7 +66,7 @@ object KGEM {
     if (clusters.size > k)
       do {
         val bg = getBadGenotype(clusters)
-        clusters = clusters.filter(c => c != bg)
+        clusters = clusters.filter(_ != bg)
         clusters = run(clusters, alpha)
       } while (clusters.size > k)
     clusters
@@ -128,7 +129,7 @@ object KGEM {
       println("KGEM iteration #%d done in %.2f minutes".format(i, ((System.currentTimeMillis - st) * 1.0 / 60000)))
       i += 1
     }
-    for (g <- gens) g.sqNormalize
+    rounding(gens)
   }
 
   private def rounding(gens: Iterable[Genotype]) = {
@@ -151,7 +152,7 @@ object KGEM {
   }
 
   private def doAlleleFreqEstimation(g: Genotype, pqs: Array[Double]): Unit = {
-   // if (g.convergen) return
+    if (g.convergen) return
     val prev = g.toIntegralString
     for (e <- g.data.zipWithIndex.par) {
       for (v <- e._1.keys) e._1(v) = 0
@@ -177,7 +178,7 @@ object KGEM {
   private def getThreshold = {
     val n = reads.map(r => r.freq).sum
     val topBound = pValue / n
-    val p = em.eps
+    val p = EM.eps
     var step = (n/2).toInt
     var x = step
     while (step > 1) {

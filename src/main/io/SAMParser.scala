@@ -13,7 +13,7 @@ import collection.JavaConversions._
  * To change this template use File | Settings | File Templates.
  */
 object SAMParser {
-  val S = " "
+  val S = "N"
 
   def readSAMFile(f: File): Iterable[SAMRecord] = {
     if (!f.exists()) System.err.println("File not found!")

@@ -17,6 +17,10 @@ import java.io.PrintStream
  */
 object Main {
   def main(args: Array[String]): Unit = {
+    run(args)
+  }
+
+  private def run(args: Array[String]) {
     ArgumentParser.parseArguments(args) match {
       case None => sys.exit(1)
       case Some(config: Config) => {
@@ -46,8 +50,8 @@ object Main {
             val gens = if (config.consensusFile == null) {
               if (config.clustering != null) {
                 val k = config.k.head
-                val seeds = MaxDistanceSeedFinder.findSeeds(reads.toList, k, 3)
-                KGEM.runCl(seeds, k, alpha)
+                val seeds = MaxDistanceSeedFinder.findSeeds(reads.toList, 2*k, 3)
+                KGEM.runCl(seeds, 2*k, alpha)
               } else {
                 if (config.k.length > 1) KGEM.initThreshold(0)
                 else if (config.prThr >= 0) KGEM.initThreshold(config.prThr)
@@ -68,13 +72,12 @@ object Main {
             outputResult(rescl, gens, n, s => s.replaceAll("-", ""))
             if (config.clustering != null) {
               val pqrs = KGEM.getPqrs(gens)
-              outputClusteredFasta(rclust, gens, KGEM.getReads, pqrs, config.clustering)
+              outputClusteredFasta(rclust, gens, KGEM.getReads, pqrs, config.clustering, config.k.head)
             }
             println(("The whole procedure took %.2f minutes\n" +
               "Total number of haplotypes is %d \nbye bye").format(
               ((System.currentTimeMillis - s) * 0.0001 / 6), gens.size))
         }
-        sys.exit(0)
       }
     }
   }

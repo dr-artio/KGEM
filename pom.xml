@@ -45,38 +45,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <!-- <finalName>k-gem</finalName> -->
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <archive>
-                        <manifest>
-                            <mainClass>edu.gsu.cs.kgem.exec.Main</mainClass>
-                            <addDefaultImplementationEntries>
-                                true
-                            </addDefaultImplementationEntries>
-                        </manifest>
-                        <manifestEntries>
-                            <mode>development</mode>
-
-                            <url>${project.url}</url>
-                            <author>Alex Artyomenko</author>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.scala-tools</groupId>
                 <artifactId>maven-scala-plugin</artifactId>
                 <version>2.15.2</version>
@@ -96,29 +64,29 @@
                     </jvmArgs>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>com.github.github</groupId>
-                <artifactId>site-maven-plugin</artifactId>
-                <version>0.8</version>
-                <configuration>
-                    <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
-                    <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
-                    <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
-                    <branch>mvn-repo</branch>                       <!-- remote branch name -->
-                    <includes><include>**/*</include></includes>
-                    <repositoryName>KGEM</repositoryName>      <!-- github repo name -->
-                    <repositoryOwner>night-stalker</repositoryOwner>    <!-- github username  -->
-                </configuration>
-                <executions>
-                    <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
-                    <execution>
-                        <goals>
-                            <goal>site</goal>
-                        </goals>
-                        <phase>deploy</phase>
-                    </execution>
-                </executions>
-            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>com.github.github</groupId>-->
+                <!--<artifactId>site-maven-plugin</artifactId>-->
+                <!--<version>0.8</version>-->
+                <!--<configuration>-->
+                    <!--<message>Maven artifacts for ${project.version}</message>  &lt;!&ndash; git commit message &ndash;&gt;-->
+                    <!--<noJekyll>true</noJekyll>                                  &lt;!&ndash; disable webpage processing &ndash;&gt;-->
+                    <!--<outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> &lt;!&ndash; matches distribution management repository url above &ndash;&gt;-->
+                    <!--<branch>mvn-repo</branch>                       &lt;!&ndash; remote branch name &ndash;&gt;-->
+                    <!--<includes><include>**/*</include></includes>-->
+                    <!--<repositoryName>KGEM</repositoryName>      &lt;!&ndash; github repo name &ndash;&gt;-->
+                    <!--<repositoryOwner>night-stalker</repositoryOwner>    &lt;!&ndash; github username  &ndash;&gt;-->
+                <!--</configuration>-->
+                <!--<executions>-->
+                    <!--&lt;!&ndash; run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase &ndash;&gt;-->
+                    <!--<execution>-->
+                        <!--<goals>-->
+                            <!--<goal>site</goal>-->
+                        <!--</goals>-->
+                        <!--<phase>deploy</phase>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+            <!--</plugin>-->
         </plugins>
     </build>
     <properties>
@@ -145,13 +113,13 @@
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.10</artifactId>
-            <version>2.0.M5b</version>
+            <version>2.0.M8</version>
         </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.0</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>junit</groupId>-->
+            <!--<artifactId>junit</artifactId>-->
+            <!--<version>4.0</version>-->
+        <!--</dependency>-->
         <!-- other biojava jars as needed -->
         <dependency>
             <groupId>com.github.scopt</groupId>
@@ -172,6 +140,21 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jakewharton</groupId>
+            <artifactId>github-deploy-maven-plugin</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>apporiented.com</groupId>
+            <artifactId>hierarchical-clustering</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>clustering</groupId>
+            <artifactId>ClusterLib</artifactId>
+            <version>1.0</version>
         </dependency>
     </dependencies>
     <pluginRepositories>

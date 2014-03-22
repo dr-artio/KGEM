@@ -9,10 +9,14 @@ import edu.gsu.cs.kgem.model.{KGEM, Read, Genotype}
  * Object for performing Expectation Maximization (EM)
  * estimation for prescribed model.
  */
+object EM{
+  val eps = 0.0025
+}
+
 class EM(gens: List[Genotype], reads: List[Read]) {
   val rs = (0 until reads.size)
   val gs = (0 until gens.size)
-  val eps = 0.0025
+  val eps = EM.eps
 
   var h_rs = initHrs
   var freqs = Array.fill(gens.size) {
