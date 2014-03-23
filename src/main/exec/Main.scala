@@ -48,11 +48,12 @@ object Main {
 
             //get the genotypes from the best model in range or use the provided seeds
             val gens = if (config.consensusFile == null) {
-              if (config.clustering != null) {
-                val k = config.k.head
-                val seeds = MaxDistanceSeedFinder.findSeeds(reads.toList, 2*k, 3)
-                KGEM.runCl(seeds, 2*k, alpha)
-              } else {
+//             if (config.clustering != null) {
+//                val k = config.k.head
+//                val seeds = MaxDistanceSeedFinder.findSeeds(reads.toList, 2*k, 3)
+//                KGEM.runCl(seeds, 2*k, alpha)
+//              } else
+              {
                 if (config.k.length > 1) KGEM.initThreshold(0)
                 else if (config.prThr >= 0) KGEM.initThreshold(config.prThr)
                 else KGEM.initThreshold

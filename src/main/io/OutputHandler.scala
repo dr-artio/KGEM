@@ -7,7 +7,7 @@ import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.{FastaReaderHelper, FastaWriterHelper}
 import collection.JavaConversions._
 import org.apache.commons.lang3.StringUtils.getLevenshteinDistance
-import com.apporiented.algorithm.clustering._
+//import com.apporiented.algorithm.clustering._
 import scala.collection.mutable.ListBuffer
 import scala.Some
 
@@ -99,7 +99,8 @@ object OutputHandler {
     val sizes = new Array[Int](genSeqs.length)
     groups.foreach(g => sizes(genSeqs.indexWhere(t => t._1.ID == g._1.ID)) = g._2.map(_._1.freq).sum.toInt)
     println(sizes.sum)
-    val clusterMap = hierarchicalClustering(genSeqs, sizes, k)
+    val clusterMap =  genSeqs.map(g => (g._1.ID, g._1.ID)).toMap
+      //hierarchicalClustering(genSeqs, sizes, k)
 
     val dsThresholds = groups.map(g => {
       def readSeq(r: Read) = rs(r.ids.head).getSequenceAsString
@@ -175,25 +176,25 @@ object OutputHandler {
    * Map with ids of original cluster
    * centers' ids and new id as a value
    */
-  private def hierarchicalClustering(genSeqs: List[(Genotype, String)], sizes: Array[Int], k: Int) = {
-    val l = genSeqs.length
-    val distanceMatrix = Array.tabulate[Double](l, l)((i, j) => hammingDistance(genSeqs.get(i)._1.toIntegralString, genSeqs.get(j)._1.toIntegralString))
-
-    val alg = new DefaultClusteringAlgorithm()
-
-    val names = genSeqs.map(_._1.ID.toString).toArray[String]
-    val cluster = alg.performClustering(distanceMatrix, sizes, names)
-
-    var clusters = new ListBuffer[Cluster]()
-    clusters += cluster
-    while (clusters.size < k) {
-      val nextSplitCluster = clusters.filter(_.getDistance != null).maxBy(_.getDistance)
-      clusters.-=(nextSplitCluster)
-      clusters ++= nextSplitCluster.getChildren
-    }
-
-    genSeqs.map(g => (g._1.ID, clusters.indexWhere(_.getName.split(AMP).exists(_.equals(g._1.ID.toString))))).toMap
-  }
+//  private def hierarchicalClustering(genSeqs: List[(Genotype, String)], sizes: Array[Int], k: Int) = {
+//    val l = genSeqs.length
+//    val distanceMatrix = Array.tabulate[Double](l, l)((i, j) => hammingDistance(genSeqs.get(i)._1.toIntegralString, genSeqs.get(j)._1.toIntegralString))
+//
+//    val alg = new DefaultClusteringAlgorithm()
+//
+//    val names = genSeqs.map(_._1.ID.toString).toArray[String]
+//    val cluster = alg.performClustering(distanceMatrix, sizes, names)
+//
+//    var clusters = new ListBuffer[Cluster]()
+//    clusters += cluster
+//    while (clusters.size < k) {
+//      val nextSplitCluster = clusters.filter(_.getDistance != null).maxBy(_.getDistance)
+//      clusters.-=(nextSplitCluster)
+//      clusters ++= nextSplitCluster.getChildren
+//    }
+//
+//    genSeqs.map(g => (g._1.ID, clusters.indexWhere(_.getName.split(AMP).exists(_.equals(g._1.ID.toString))))).toMap
+//  }
 
   private def trim(str: String, char: Char): String = {
     str.dropWhile(c => c == char).reverse.dropWhile(c => c == char).reverse
