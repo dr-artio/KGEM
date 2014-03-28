@@ -4,7 +4,7 @@ import java.io.File
 import scopt.OptionParser
 import edu.gsu.cs.kgem.exec._
 
-case class Config(readsFile: File = null, k: Int = 50, threshold: Int = 3,
+case class Config(readsFile: File = null, k: Int = 50, threshold: Int = 3, clustering: File = null,
                   consensusFile: File = null, prThr: Double = -1, output: File = new File(System.getProperty(USER_DIR)))
 
 
@@ -40,6 +40,7 @@ object ArgumentParser {
       opt[File]('o', "output-dir") action {
         (x, c) => c.copy(output = x)
       } text ("Directory to output results.")
+      opt[File]('c',"clustering") action { (x, c) => c.copy(clustering = x)}
       opt[Unit]('h', "help") action {
         (x, c) => showUsage; sys.exit(0)
       } text ("Prints this help text.")
