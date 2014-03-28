@@ -1,23 +1,92 @@
 package edu.gsu.cs.kgem
 
+import edu.gsu.cs.kgem.model.MaxDistanceSeedFinder
 import collection.mutable
-import io.SAMParser
-import model.Read
-import java.io.File
+import edu.gsu.cs.kgem.io.{ArgumentParser, SAMParser}
+import edu.gsu.cs.kgem.model.{Genotype, KGEM, Read}
+import java.io.{PrintStream, File}
 import net.sf.samtools.{SAMFileHeader, SAMRecord}
 import org.biojava3.core.sequence.io.FastaReaderHelper.readFastaDNASequence
 import collection.JavaConversions._
 import scala.io.Source.fromFile
-import org.biojava3.core.sequence.DNASequence
+import java.util.Date
+import java.text.SimpleDateFormat
+import edu.gsu.cs.kgem.io.OutputHandler._
+import edu.gsu.cs.kgem.io.Config
+import scala.Some
 
 /**
  * Created with IntelliJ IDEA.
  * User: aartyomenko
  * Date: 3/30/13
  * Time: 3:02 PM
- * To change this template use File | Settings | File Templates.
  */
 package object exec {
+  private val sdf = new SimpleDateFormat("[hh:mm:ss a]")
+  private val FASTA = Array[String](".fas", ".fa", ".fasta")
+  val USER_DIR = "user.dir"
+  val KGEM_STR = "kGEM version %s: Local Reconstruction for Mixed Viral Populations."
+  val LINE = "------------------------------------------------------------"
+  var hap: PrintStream = null
+  var hapcl: PrintStream = null
+  var res: PrintStream = null
+  var rescl: PrintStream = null
+  var config: Config = null
+  var reads: List[Read] = null
+  var k: Int = -1
+  var threshold: Int = 0
+  var n: Int = 0
+
+  protected[exec] def parseArgs(args: Array[String]) = {
+    ArgumentParser.parseArguments(args) match {
+      case None => sys.exit(1)
+      case Some(config: Config) => {
+        this.config = config
+        setupOutputDir(config.output) match {
+          case None => sys.exit(1)
+          case Some((hap: PrintStream, hapcl: PrintStream, res: PrintStream, rescl: PrintStream)) => {
+            this.hap = hap
+            this.hapcl = hapcl
+            this.res = res
+            this.rescl = rescl
+          }
+        }
+      }
+    }
+  }
+
+  def initInputData(readsFile: File = config.readsFile) = {
+    if (!FASTA.exists(readsFile.getName.toLowerCase.endsWith)) sys.exit(1)
+    reads = initFastaReads(readsFile).toList
+    k = config.k
+    threshold = config.threshold
+    n = reads.map(r => r.freq).sum.toInt
+  }
+
+  def executeKgem(reads: List[Read] = reads, k: Int = k, threshold: Int = threshold) = {
+    KGEM.initReads(reads.toList)
+    val gens = if (config.consensusFile == null) {
+      if (config.prThr >= 0) KGEM.initThreshold(config.prThr)
+      else KGEM.initThreshold
+      val seeds = MaxDistanceSeedFinder.findSeeds(reads, k, threshold)
+      KGEM.run(seeds)
+    } else {
+      val seeds = initFastaReads(config.consensusFile).map(r => new Genotype(r.seq))
+      KGEM.run(seeds)
+    }
+    gens.toList
+  }
+
+  protected[exec] def outputResults(gens: List[Genotype], s: Long) = {
+    outputHaplotypes(hap, gens)
+    outputHaplotypes(hapcl, gens, s => s.replaceAll("-", ""))
+    outputResult(res, gens, n)
+    outputResult(rescl, gens, n, s => s.replaceAll("-", ""))
+    log("The whole procedure took %.2f minutes".format(((System.currentTimeMillis - s) * 0.0001 / 6)))
+    log("Total number of haplotypes is %d".format(gens.size))
+    log("bye bye")
+  }
+
 
   /**
    * Read SAM file and fold according to extended
@@ -27,6 +96,7 @@ package object exec {
    * @return
    * Iterable collection of Reads
    */
+  @deprecated
   def initSAMReads(fl: File): Iterable[Read] = {
     val samRecords = SAMParser.readSAMFile(fl)
     var extSAMRecords = samRecords.map(s => SAMParser.toExtendedString(s))
@@ -53,7 +123,7 @@ package object exec {
     val samRecords = toSAMRecords(readsMap)
     val reads = toReads(samRecords)
     initReadFreqs(reads, readsMap)
-    println("Number of distinct reads: %d".format(reads.size))
+    log("Number of distinct reads: %d".format(reads.size))
     reads
   }
 
@@ -64,13 +134,14 @@ package object exec {
    * of alignment postprocessing tool.
    * (Temporary solution)
    * @param fl
-   *           Aligned reads (Internal txt format)
+   * Aligned reads (Internal txt format)
    * @return
-   *         Iterable collection of reds
+   * Iterable collection of reds
    */
+  @deprecated
   def initTxtReads(fl: File): Iterable[Read] = {
     val lines = fromFile(fl).getLines
-    val readsMap = flip(lines.zipWithIndex.map(s => ("Read"+s._2, s._1)).toMap)
+    val readsMap = flip(lines.zipWithIndex.map(s => ("Read" + s._2, s._1)).toMap)
     val samRecords = toSAMRecords(readsMap)
     val reads = toReads(samRecords)
     initReadFreqs(reads, readsMap.map(entry => (entry._1, entry._2)).toMap)
@@ -142,16 +213,21 @@ package object exec {
    * Flip map into mulimap
    * Map[X, Y] => Map[ Y, Set[X] ]
    * @param m
-   *          Input Map[X, Y]
+   * Input Map[X, Y]
    * @tparam X
-   *           Type of Key
+   * Type of Key
    * @tparam Y
-   *           Type of Value
+   * Type of Value
    * @return
-   *         Map[ Y, Set[X] ]
+   * Map[ Y, Set[X] ]
    */
   def flip[X, Y](m: Map[X, Y]): Map[Y, Set[X]] =
     m.groupBy(_._2).mapValues(_.map(_._1).toSet)
+
+  def log(mes: String) = {
+    val date = new Date()
+    println("%s %s".format(sdf.format(date), mes))
+  }
 
   /**
    * Deserialize SAMRecords from strings
@@ -169,9 +245,9 @@ package object exec {
   /**
    * Deserialize one {@see SAMRecord} from {@see String}
    * @param st
-   *           {@see SAMRecord} in {@see String}
+   * { @see SAMRecord} in { @see String}
    * @return
-   *         Wrapped {@see SAMRecord} object
+   * Wrapped { @see SAMRecord} object
    */
   @deprecated
   private def toSAMRecord(st: (String, Set[String])) = {
@@ -179,5 +255,11 @@ package object exec {
     sam.setAlignmentStart(1)
     sam.setReadString(st._1)
     sam
+  }
+
+  protected[exec] def printGreetings = {
+    log(LINE)
+    log(KGEM_STR.format(Main.getClass.getPackage.getImplementationVersion))
+    log(LINE)
   }
 }

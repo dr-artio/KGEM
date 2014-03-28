@@ -1,10 +1,9 @@
 package edu.gsu.cs.kgem.model
 
 import collection.mutable
-import edu.gsu.cs.kgem.model.initialization.MaxDistanceSeedFinder
 import util.Random
 import org.apache.commons.math3.distribution.BinomialDistribution
-import edu.gsu.cs.kgem.model.estimation.{EMMAP, EM}
+import edu.gsu.cs.kgem.exec.log
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -55,7 +54,7 @@ object KGEM {
       collapse = thresholdClean(collapse, tr)
       collapse.zipWithIndex.foreach(pair => genMap += pair)
       collapsed -= collapse.size
-      println("KGEM collapsed %d genotypes".format(collapsed))
+      log("KGEM collapsed %d genotypes".format(collapsed))
     } while (collapsed > 0)
     calcLogLikelihood(collapse, genMap, alpha)
     collapse
@@ -75,7 +74,7 @@ object KGEM {
   def getBadGenotype(gens: Iterable[Genotype]) = {
     val pairs = new ListBuffer[(Genotype, Genotype)]()
     var gg = gens
-    while(!gg.tail.isEmpty){
+    while (!gg.tail.isEmpty) {
       pairs ++= gg.tail.map(g => (gg.head, g))
       gg = gg.tail
     }
@@ -89,12 +88,12 @@ object KGEM {
 
   def initThreshold(tr: Double) {
     this.tr = tr
-    println("Set threshold: %f".format(tr))
+    log("Set threshold: %f".format(tr))
   }
 
   def initThreshold = {
     this.tr = getThreshold
-    println("Computed threshold: %f".format(tr))
+    log("Computed threshold: %f".format(tr))
   }
 
   private def calcLogLikelihood(gens: Iterable[Genotype], genIdxMap: mutable.HashMap[Genotype, Int], alpha: Double) = {
@@ -123,10 +122,10 @@ object KGEM {
     while (!gens.forall(g => g.convergen) && i <= 10) {
       val st = System.currentTimeMillis
       rounding(gens)
-      if (alpha > 0) runEM(gens, alpha)
-        else runEM(gens)
+      if (alpha > 0) runEM(gens)
+      else runEM(gens)
       alleleFreqEstimation(gens)
-      println("KGEM iteration #%d done in %.2f minutes".format(i, ((System.currentTimeMillis - st) * 1.0 / 60000)))
+      log("KGEM iteration #%d done in %.2f minutes".format(i, ((System.currentTimeMillis - st) * 1.0 / 60000)))
       i += 1
     }
     rounding(gens)
@@ -136,13 +135,8 @@ object KGEM {
     for (g <- gens) g.round
   }
 
-  def runEM(gens: Iterable[Genotype], alpha: Double) = {
-    em = new EMMAP(gens.toList, reads.toList, alpha)
-    em.run
-  }
-
   def runEM(gens: Iterable[Genotype]) = {
-    em = new EM(gens.toList, reads)
+    em = new EM(gens.toList, reads.toList)
     em.run
   }
 
@@ -173,17 +167,17 @@ object KGEM {
    * pValue - measure of randomness (Default: 5% hardcoded)
    * n - number of reads in a given sample
    * @return
-   *         Estimated threshold
+   * Estimated threshold
    */
   private def getThreshold = {
     val n = reads.map(r => r.freq).sum
     val topBound = pValue / n
     val p = EM.eps
-    var step = (n/2).toInt
+    var step = (n / 2).toInt
     var x = step
     while (step > 1) {
       step /= 2
-      if (sf(x, n.toInt, p)<topBound) x -= step
+      if (sf(x, n.toInt, p) < topBound) x -= step
       else x += step
     }
     x / n
@@ -194,12 +188,12 @@ object KGEM {
    * (1 - CDF(x)) for binomial distribution
    * with a given parameters
    * @param x
-   *          Argument for Pr(X>=x)
+   * Argument for Pr(X>=x)
    * @param n
-   *          Number of samples in Binomial
-   *          distribution
+   * Number of samples in Binomial
+   * distribution
    * @param p
-   *          Probability of success
+   * Probability of success
    */
   private def sf(x: Int, n: Int, p: Double) = {
     1.0 - new BinomialDistribution(n, p).cumulativeProbability(x)
@@ -240,7 +234,7 @@ object KGEM {
   /**
    * Get pqrs for generating clustering string
    * @return
-   *         Matrix with P_qr 's
+   * Matrix with P_qr 's
    */
   def getPqrs(gens: Iterable[Genotype]) = {
     new EM(gens.toList, reads).h_rs

@@ -1,15 +1,16 @@
-package edu.gsu.cs.kgem.model.estimation
+package edu.gsu.cs.kgem.model
 
-import edu.gsu.cs.kgem.model.{KGEM, Read, Genotype}
+import edu.gsu.cs.kgem.exec.log
+
 /**
  * Created with IntelliJ IDEA.
  * User: aartyomenko
  * Date: 3/17/13
  * Time: 8:24 PM
  * Object for performing Expectation Maximization (EM)
- * estimation for prescribed model.
+ * estimation for prescribed edu.gsu.cs.kgem.model.
  */
-object EM{
+object EM {
   val eps = 0.0025
 }
 
@@ -119,7 +120,7 @@ class EM(gens: List[Genotype], reads: List[Read]) {
     for (i <- gs) {
       freqs(i) = nfqs(i)
     }
-    println("%f".format(change))
+    log("%f".format(change))
     change
   }
 }

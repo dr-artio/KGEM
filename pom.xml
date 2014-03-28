@@ -6,7 +6,7 @@
 
     <groupId>edu.gsu.cs</groupId>
     <artifactId>kgem</artifactId>
-    <version>0.4.2</version>
+    <version>0.5</version>
     <packaging>jar</packaging>
 
     <name>KGEM</name>
@@ -40,8 +40,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.5</source>
+                    <target>1.5</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -64,36 +64,8 @@
                     </jvmArgs>
                 </configuration>
             </plugin>
-            <!--<plugin>-->
-                <!--<groupId>com.github.github</groupId>-->
-                <!--<artifactId>site-maven-plugin</artifactId>-->
-                <!--<version>0.8</version>-->
-                <!--<configuration>-->
-                    <!--<message>Maven artifacts for ${project.version}</message>  &lt;!&ndash; git commit message &ndash;&gt;-->
-                    <!--<noJekyll>true</noJekyll>                                  &lt;!&ndash; disable webpage processing &ndash;&gt;-->
-                    <!--<outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> &lt;!&ndash; matches distribution management repository url above &ndash;&gt;-->
-                    <!--<branch>mvn-repo</branch>                       &lt;!&ndash; remote branch name &ndash;&gt;-->
-                    <!--<includes><include>**/*</include></includes>-->
-                    <!--<repositoryName>KGEM</repositoryName>      &lt;!&ndash; github repo name &ndash;&gt;-->
-                    <!--<repositoryOwner>night-stalker</repositoryOwner>    &lt;!&ndash; github username  &ndash;&gt;-->
-                <!--</configuration>-->
-                <!--<executions>-->
-                    <!--&lt;!&ndash; run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase &ndash;&gt;-->
-                    <!--<execution>-->
-                        <!--<goals>-->
-                            <!--<goal>site</goal>-->
-                        <!--</goals>-->
-                        <!--<phase>deploy</phase>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
         </plugins>
     </build>
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- github server corresponds to entry in ~/.m2/settings.xml -->
-        <github.global.server>github</github.global.server>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>org.biojava</groupId>
@@ -146,11 +118,6 @@
             <artifactId>github-deploy-maven-plugin</artifactId>
             <version>1.0.1</version>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>apporiented.com</groupId>-->
-            <!--<artifactId>hierarchical-clustering</artifactId>-->
-            <!--<version>1.0</version>-->
-        <!--</dependency>-->
     </dependencies>
     <pluginRepositories>
         <pluginRepository>

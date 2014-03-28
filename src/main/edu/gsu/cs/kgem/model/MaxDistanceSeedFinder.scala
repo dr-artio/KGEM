@@ -1,9 +1,8 @@
-package edu.gsu.cs.kgem.model.initialization
+package edu.gsu.cs.kgem.model
 
-import edu.gsu.cs.kgem.model.{Genotype, Read}
+import edu.gsu.cs.kgem.exec.log
 import java.util.Random
 import scala.collection.mutable
-import collection.JavaConversions._
 import Math.min
 
 /**
@@ -14,7 +13,7 @@ import Math.min
  * Class to wrap derandomized KGEM, i. e. initialization with maximizing distance between
  * seeds and detection of size of the population via distance threshold.
  */
-object MaxDistanceSeedFinder extends SeedFinder {
+object MaxDistanceSeedFinder {
 
   /**
    * Find seeds according to maximization Hamming distance between all pairs
@@ -44,7 +43,7 @@ object MaxDistanceSeedFinder extends SeedFinder {
       seeds += cur._1
       distanceMap = distanceMap.map(e => (e._1, min(e._2, hammingDistance(cur._1, e._1))))
     }
-    println("Final max HD: %.0f".format(maxHD))
+    log("Final max Hamming Distance: %.0f".format(maxHD))
     return seeds.map(r => new Genotype(r.seq))
   }
 

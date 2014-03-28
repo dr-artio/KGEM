@@ -1,7 +1,7 @@
-package edu.gsu.cs.kgem.model.initialization
+package edu.gsu.cs.kgem.model
 
 import org.scalatest.FlatSpec
-import edu.gsu.cs.kgem.model.initialization.MaxDistanceSeedFinder._
+import edu.gsu.cs.kgem.model.MaxDistanceSeedFinder.hammingDistance
 import Math.min
 
 /**
