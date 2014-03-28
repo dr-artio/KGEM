@@ -71,7 +71,6 @@ object OutputHandler {
     writeFasta(out, haplSeqs)
   }
 
-
   private def trim(str: String, char: Char): String = {
     str.dropWhile(c => c == char).reverse.dropWhile(c => c == char).reverse
   }
@@ -80,7 +79,7 @@ object OutputHandler {
                              (implicit v1: M[M[A]] => Seq[M[A]], v2: M[A] => Seq[A]): Seq[A] =
     matrix.map(_(colIdx))
 
-  private def writeFasta(out: PrintStream, seq: Iterable[DNASequence]) {
+  def writeFasta(out: PrintStream, seq: Iterable[DNASequence]) {
     try {
       FastaWriterHelper.writeNucleotideSequence(out, seq)
     } finally {
@@ -107,7 +106,7 @@ object OutputHandler {
    * Some((hapOutput: PrintStream, resultsOutput: PrintStream)).
    *
    */
-  def setupOutputDir(dir: File): Option[(PrintStream, PrintStream, PrintStream, PrintStream)] = {
+  def setupOutputDir(dir: File): Option[(PrintStream, PrintStream, PrintStream, PrintStream, PrintStream)] = {
     // Try to make the output directory. If it fails, return None.
     if (!dir.exists()) {
       if (!dir.mkdir()) {
@@ -116,12 +115,12 @@ object OutputHandler {
       }
     }
 
-    // Try to open output files. If they fail, return None.
     val baseName = dir.getAbsolutePath() + File.separator
     val hapOutputName = "%s%s".format(baseName, "haplotypes.fas")
     val cleanedHapOutputName = "%s%s".format(baseName, "haplotypes_cleaned.fas")
     val readsOutputName = "%s%s".format(baseName, "reads.fas")
     val cleanedReadsOutputName = "%s%s".format(baseName, "reads_cleaned.fas")
+    val readsClustered = "%s%s".format(baseName, "reads_clustered.fas")
 
     try {
       val hapout = new PrintStream(hapOutputName)
@@ -131,7 +130,12 @@ object OutputHandler {
           val hapclout = new PrintStream(cleanedHapOutputName)
           try {
             val readclsout = new PrintStream(cleanedReadsOutputName)
-            return Some((hapout, hapclout, readsout, readclsout))
+            try {
+              val readsclust = new PrintStream(readsClustered)
+              return Some((hapout, hapclout, readsout, readclsout, readsclust))
+            } catch {
+              case _: Throwable => println("Cannot create file: " + readsClustered); return None
+            }
           } catch {
             case _: Throwable => println("Cannot create file: " + cleanedReadsOutputName); return None
           }

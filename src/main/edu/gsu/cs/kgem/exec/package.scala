@@ -1,17 +1,21 @@
 package edu.gsu.cs.kgem
 
-import edu.gsu.cs.kgem.model.MaxDistanceSeedFinder
+import edu.gsu.cs.kgem.model._
 import collection.mutable
 import edu.gsu.cs.kgem.io.{ArgumentParser, SAMParser}
-import edu.gsu.cs.kgem.model.{Genotype, KGEM, Read}
 import java.io.{PrintStream, File}
 import net.sf.samtools.{SAMFileHeader, SAMRecord}
-import org.biojava3.core.sequence.io.FastaReaderHelper.readFastaDNASequence
+import org.biojava3.core.sequence.io.FastaReaderHelper._
 import collection.JavaConversions._
 import scala.io.Source.fromFile
 import java.util.Date
 import java.text.SimpleDateFormat
 import edu.gsu.cs.kgem.io.OutputHandler._
+import edu.gsu.cs.kgem.io.Config
+import scala.Some
+import org.biojava3.core.sequence.DNASequence
+import edu.gsu.cs.kgem.io.Config
+import scala.Some
 import edu.gsu.cs.kgem.io.Config
 import scala.Some
 
@@ -31,8 +35,10 @@ package object exec {
   var hapcl: PrintStream = null
   var res: PrintStream = null
   var rescl: PrintStream = null
+  var clust: PrintStream = null
   var config: Config = null
   var reads: List[Read] = null
+  var seqs: Map[String, DNASequence] = null
   var k: Int = -1
   var threshold: Int = 0
   var n: Int = 0
@@ -44,11 +50,12 @@ package object exec {
         this.config = config
         setupOutputDir(config.output) match {
           case None => sys.exit(1)
-          case Some((hap: PrintStream, hapcl: PrintStream, res: PrintStream, rescl: PrintStream)) => {
+          case Some((hap: PrintStream, hapcl: PrintStream, res: PrintStream, rescl: PrintStream, clust: PrintStream)) => {
             this.hap = hap
             this.hapcl = hapcl
             this.res = res
             this.rescl = rescl
+            this.clust = clust
           }
         }
       }
@@ -58,7 +65,7 @@ package object exec {
   def initInputData(readsFile: File = config.readsFile) = {
     if (!FASTA.exists(readsFile.getName.toLowerCase.endsWith)) sys.exit(1)
     reads = initFastaReads(readsFile).toList
-    k = config.k
+    k = if (config.clustering != null) config.k * 2 else config.k
     threshold = config.threshold
     n = reads.map(r => r.freq).sum.toInt
   }
@@ -77,11 +84,20 @@ package object exec {
     gens.toList
   }
 
+  protected[exec] def clusteringHandler(gens: List[Genotype]) = {
+    if (config.clustering != null) {
+      val readSeqs = readFastaDNASequence(config.clustering).toMap
+      val clusteredReads = KGEM.clustering(gens, readSeqs, config.k)
+      writeFasta(clust, clusteredReads)
+    }
+  }
+
   protected[exec] def outputResults(gens: List[Genotype], s: Long) = {
     outputHaplotypes(hap, gens)
     outputHaplotypes(hapcl, gens, s => s.replaceAll("-", ""))
     outputResult(res, gens, n)
     outputResult(rescl, gens, n, s => s.replaceAll("-", ""))
+
     log("The whole procedure took %.2f minutes".format(((System.currentTimeMillis - s) * 0.0001 / 6)))
     log("Total number of haplotypes is %d".format(gens.size))
     log("bye bye")

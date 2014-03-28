@@ -5,6 +5,7 @@ import util.Random
 import org.apache.commons.math3.distribution.BinomialDistribution
 import edu.gsu.cs.kgem.exec.log
 import scala.collection.mutable.ListBuffer
+import org.biojava3.core.sequence.DNASequence
 
 /**
  * Created with IntelliJ IDEA.
@@ -40,6 +41,10 @@ object KGEM {
       yield (nucl, zreads.filter(r => r._1.seq(i).equals(nucl(0))))).toMap)
       i += 1
     }
+  }
+
+  def clustering(gens: List[Genotype], rs: Map[String, DNASequence], k: Int) = {
+    Clusterer.getClusteredFastaSequencies(gens, reads, getPqrs(gens), rs, k)
   }
 
   def run(gens: Iterable[Genotype], alpha: Double = 0) = {

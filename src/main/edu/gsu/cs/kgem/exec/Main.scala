@@ -18,6 +18,7 @@ object Main {
     initInputData()
     log("KGEM started...")
     val gens = executeKgem()
+    clusteringHandler(gens)
     log("Output results...")
     outputResults(gens, s)
   }
