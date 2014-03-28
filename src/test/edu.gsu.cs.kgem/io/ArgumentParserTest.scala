@@ -37,65 +37,7 @@ class ArgumentParserTest extends FlatSpec {
 
   it should " return empty Option[Config] when bad threshold is supplied"  in {
     val args = new Array[String](3)
-    args(0) = "reads.sam"
-    args(1) = "-t"
-    args(2) = "0"
     var config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
-
-    args(0) = "reads.sam"
-    args(1) = "-t"
-    args(2) = "-5"
-    config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
-  }
-
-  it should "return empty Option[Config] when bad range is supplied" in {
-    val args = new Array[String](2)
-    args(0) = "reads.sam"
-    args(1) = "-10:15"
-    var config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
-
-    args(0) = "reads.sam"
-    args(1) = "0:15"
-    config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
-
-    args(0) = "reads.sam"
-    args(1) = "15:0"
-    config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
-
-    args(0) = "reads.sam"
-    args(1) = "0:0"
-    config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
-
-    args(0) = "reads.sam"
-    args(1) = "-10:15"
-    config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
-
-    args(0) = "reads.sam"
-    args(1) = "0:15"
-    config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
-
-    args(0) = "reads.sam"
-    args(1) = "15:0"
-    config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
-
-    args(0) = "reads.sam"
-    args(1) = "0:0"
-    config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
-
-    args(0) = "reads.sam"
-    args(1) = "10:15:20"
-    config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
 
     args(0) = "reads.sam"
     args(1) = "funfun"
@@ -109,25 +51,5 @@ class ArgumentParserTest extends FlatSpec {
     args(1) = "10"
     var config = ArgumentParser.parseArguments(args)
     assert(!config.isEmpty)
-
-    args(0) = "reads.sam"
-    args(1) = "10:15"
-    config = ArgumentParser.parseArguments(args)
-    assert(!config.isEmpty)
-  }
-
-  it should "return empty Option[Config] when a bad scoring function is specified" in {
-    val args = new Array[String](3)
-    args(0) = "reads.sam"
-    args(1) = "-f"
-    args(2) = "TIC"
-    var config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
-
-    args(0) = "reads.sam"
-    args(1) = "--scoring-func"
-    args(2) = "TIC"
-    config = ArgumentParser.parseArguments(args)
-    assert(config.isEmpty)
   }
 }
