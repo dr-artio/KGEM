@@ -5,7 +5,7 @@ import scopt.OptionParser
 import edu.gsu.cs.kgem.exec._
 
 case class Config(readsFile: File = null, k: Int = 50, threshold: Int = 3, clustering: File = null,
-                  consensusFile: File = null, prThr: Double = -1, output: File = new File(System.getProperty(USER_DIR)))
+                  consensusFile: File = null, prThr: Double = 0, output: File = new File(System.getProperty(USER_DIR)))
 
 
 object ArgumentParser {
@@ -15,7 +15,7 @@ object ArgumentParser {
 
   def parseArguments(args: Array[String]): Option[Config] = {
     val parser = new OptionParser[Config]("kGEM") {
-      //head(KGEM.format(Main.getClass.getPackage.getImplementationVersion))
+      head(KGEM_STR.format(Main.getClass.getPackage.getImplementationVersion))
       arg[File]("ReadsFile") action {
         (x, c) => c.copy(readsFile = x)
       } text ("Fasta (*.fa, *.fas, *.fasta) file containing aligned sequence data.")
