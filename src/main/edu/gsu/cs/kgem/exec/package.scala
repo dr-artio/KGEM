@@ -65,7 +65,7 @@ package object exec {
   def initInputData(readsFile: File = config.readsFile) = {
     if (!FASTA.exists(readsFile.getName.toLowerCase.endsWith)) sys.exit(1)
     reads = initFastaReads(readsFile).toList
-    k = if (config.clustering != null) config.k * 2 else config.k
+    k = if (config.clustering != null) config.k else config.k
     threshold = config.threshold
     n = reads.map(r => r.freq).sum.toInt
   }

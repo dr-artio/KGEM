@@ -98,7 +98,7 @@ object Clusterer {
 
     val gbReads = fixSuspeciousClusteredReads(bReads, genSeqs, dsThresholds, rs)
 
-    val res =  finalizeClustering(reads, pqrs, gbReads, genSeqs, rs)
+    val res =  finalizeClustering(reads, pqrs, Map[(Read, Int), Genotype](), genSeqs, rs)
 
     res
   }
