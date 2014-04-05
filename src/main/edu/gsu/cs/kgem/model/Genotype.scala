@@ -28,7 +28,7 @@ object Genotype {
   val sMap: Map[String, Set[NucleotideCompound]] = reverseMap(nuclMap)
 
   val N = "N"
-  val eps = 0.025
+  val eps = 0.0025
   private var id = 0
 
   private def generateID = {

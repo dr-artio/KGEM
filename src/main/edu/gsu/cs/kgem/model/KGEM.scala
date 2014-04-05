@@ -42,13 +42,13 @@ object KGEM {
     }
   }
 
-  def run(gens: Iterable[Genotype], alpha: Double = 0) = {
+  def run(gens: Iterable[Genotype]) = {
     var collapse = gens
     var collapsed = gens.size
     var genMap = new mutable.HashMap[Genotype, Int]()
     do {
       collapsed = collapse.size
-      runKgem(collapse, alpha)
+      runKgem(collapse)
       val col = collapse.map(g => (g.toIntegralString, g)).toMap
       collapse = col.values.toList
       collapse = thresholdClean(collapse, tr)
@@ -56,17 +56,16 @@ object KGEM {
       collapsed -= collapse.size
       log("KGEM collapsed %d genotypes".format(collapsed))
     } while (collapsed > 0)
-    calcLogLikelihood(collapse, genMap, alpha)
     collapse
   }
 
   def runCl(gens: Iterable[Genotype], k: Int, alpha: Double = 0) = {
-    var clusters = run(gens, alpha)
+    var clusters = run(gens)
     if (clusters.size > k)
       do {
         val bg = getBadGenotype(clusters)
         clusters = clusters.filter(_ != bg)
-        clusters = run(clusters, alpha)
+        clusters = run(clusters)
       } while (clusters.size > k)
     clusters
   }
@@ -116,14 +115,13 @@ object KGEM {
     cleaned
   }
 
-  private def runKgem(gens: Iterable[Genotype], alpha: Double) = {
+  private def runKgem(gens: Iterable[Genotype]) = {
     for (g <- gens) g.convergen = false
     var i = 1
     while (!gens.forall(g => g.convergen) && i <= 2) {
       val st = System.currentTimeMillis
       rounding(gens)
-      if (alpha > 0) runEM(gens)
-      else runEM(gens)
+      runEM(gens)
       alleleFreqEstimation(gens)
       log("KGEM iteration #%d done in %.2f minutes".format(i, ((System.currentTimeMillis - st) * 1.0 / 60000)))
       i += 1
