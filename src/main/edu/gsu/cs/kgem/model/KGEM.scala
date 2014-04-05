@@ -119,7 +119,7 @@ object KGEM {
   private def runKgem(gens: Iterable[Genotype], alpha: Double) = {
     for (g <- gens) g.convergen = false
     var i = 1
-    while (!gens.forall(g => g.convergen) && i <= 10) {
+    while (!gens.forall(g => g.convergen) && i <= 2) {
       val st = System.currentTimeMillis
       rounding(gens)
       if (alpha > 0) runEM(gens)
@@ -132,7 +132,7 @@ object KGEM {
   }
 
   private def rounding(gens: Iterable[Genotype]) = {
-    for (g <- gens) g.round
+    for (g <- gens.par) g.round
   }
 
   def runEM(gens: Iterable[Genotype]) = {
@@ -142,7 +142,7 @@ object KGEM {
 
   private def alleleFreqEstimation(gens: Iterable[Genotype]) = {
     val pqrs = em.eStep
-    for (g <- gens.zipWithIndex) doAlleleFreqEstimation(g._1, pqrs(g._2))
+    for (g <- gens.zipWithIndex.par) doAlleleFreqEstimation(g._1, pqrs(g._2))
   }
 
   private def doAlleleFreqEstimation(g: Genotype, pqs: Array[Double]): Unit = {
