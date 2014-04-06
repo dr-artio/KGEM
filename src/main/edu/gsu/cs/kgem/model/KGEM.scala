@@ -118,7 +118,7 @@ object KGEM {
   private def runKgem(gens: Iterable[Genotype]) = {
     for (g <- gens) g.convergen = false
     var i = 1
-    while (!gens.forall(g => g.convergen) && i <= 2) {
+    while (!gens.forall(g => g.convergen) && i <= 5) {
       val st = System.currentTimeMillis
       rounding(gens)
       runEM(gens)
