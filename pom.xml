@@ -6,7 +6,7 @@
 
     <groupId>edu.gsu.cs</groupId>
     <artifactId>kgem</artifactId>
-    <version>0.5</version>
+    <version>0.5c</version>
     <packaging>jar</packaging>
 
     <name>KGEM</name>
@@ -41,7 +41,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>kgem-clustering</finalName>
+                    <finalName>kgem-clustering-${project.version}</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
@@ -149,11 +149,6 @@
             <groupId>com.jakewharton</groupId>
             <artifactId>github-deploy-maven-plugin</artifactId>
             <version>1.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>apporiented.com</groupId>
-            <artifactId>hierarchical-clustering</artifactId>
-            <version>1.0</version>
         </dependency>
     </dependencies>
     <pluginRepositories>
