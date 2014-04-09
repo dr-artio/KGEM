@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat
 import edu.gsu.cs.kgem.io.OutputHandler._
 import edu.gsu.cs.kgem.io.Config
 import scala.Some
+import org.biojava3.core.sequence.DNASequence
 
 /**
  * Created with IntelliJ IDEA.
@@ -63,15 +64,16 @@ package object exec {
     n = reads.map(r => r.freq).sum.toInt
   }
 
-  def executeKgem(reads: List[Read] = reads, k: Int = k, threshold: Int = threshold) = {
+  def executeKgem(reads: List[Read] = reads, k: Int = k, threshold: Int = threshold,
+                  pr_threshold: Double = config.prThr, consensus_file: File = config.consensusFile) = {
     KGEM.initReads(reads.toList)
-    val gens = if (config.consensusFile == null) {
-      if (config.prThr >= 0) KGEM.initThreshold(config.prThr)
+    val gens = if (consensus_file == null) {
+      if (pr_threshold >= 0) KGEM.initThreshold(pr_threshold)
       else KGEM.initThreshold
       val seeds = MaxDistanceSeedFinder.findSeeds(reads, k, threshold)
       KGEM.run(seeds)
     } else {
-      val seeds = initFastaReads(config.consensusFile).map(r => new Genotype(r.seq))
+      val seeds = initFastaReads(consensus_file).map(r => new Genotype(r.seq))
       KGEM.run(seeds)
     }
     gens.toList
@@ -97,7 +99,7 @@ package object exec {
    * Iterable collection of Reads
    */
   @deprecated
-  def initSAMReads(fl: File): Iterable[Read] = {
+  protected[exec] def initSAMReads(fl: File): Iterable[Read] = {
     val samRecords = SAMParser.readSAMFile(fl)
     var extSAMRecords = samRecords.map(s => SAMParser.toExtendedString(s))
     val l = extSAMRecords.map(s => s.length).max
@@ -117,9 +119,21 @@ package object exec {
    * @return
    * Iterable collection of reads
    */
-  def initFastaReads(fl: File): Iterable[Read] = {
+  protected[exec] def initFastaReads(fl: File): Iterable[Read] = {
     val seqs = readFastaDNASequence(fl)
-    val readsMap = flip(seqs.map(en => (en._1, en._2.getSequenceAsString)).toMap)
+    convertFastaReads(seqs.values)
+  }
+
+  /**
+   * Transform DNASequence reads to
+   * internal kgem objects
+   * @param seqs
+   *             Collection of DNASequence objects
+   * @return
+   *         Collection of Read objects
+   */
+  def convertFastaReads(seqs: Iterable[DNASequence]): Iterable[Read] = {
+    val readsMap = flip(seqs.map(en => (en.getOriginalHeader, en.getSequenceAsString)).toMap)
     val samRecords = toSAMRecords(readsMap)
     val reads = toReads(samRecords)
     initReadFreqs(reads, readsMap)
@@ -139,7 +153,7 @@ package object exec {
    * Iterable collection of reds
    */
   @deprecated
-  def initTxtReads(fl: File): Iterable[Read] = {
+  protected[exec] def initTxtReads(fl: File): Iterable[Read] = {
     val lines = fromFile(fl).getLines
     val readsMap = flip(lines.zipWithIndex.map(s => ("Read" + s._2, s._1)).toMap)
     val samRecords = toSAMRecords(readsMap)
