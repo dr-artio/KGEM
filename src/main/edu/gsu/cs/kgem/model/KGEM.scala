@@ -21,7 +21,7 @@ object KGEM {
   private val pValue = 0.05
   var table: mutable.MutableList[Map[String, Iterable[(Read, Int)]]] = null
 
-  def initSeeds(n: Int): List[Genotype] = {
+  private def initSeeds(n: Int): List[Genotype] = {
     val seeds = sample(reads, n)
     return seeds.map(s => new Genotype(s.seq)).toList
   }
@@ -57,32 +57,6 @@ object KGEM {
     collapse
   }
 
-  def runCl(gens: Iterable[Genotype], k: Int, alpha: Double = 0) = {
-    var clusters = run(gens)
-    if (clusters.size > k)
-      do {
-        val bg = getBadGenotype(clusters)
-        clusters = clusters.filter(_ != bg)
-        clusters = run(clusters)
-      } while (clusters.size > k)
-    clusters
-  }
-
-  def getBadGenotype(gens: Iterable[Genotype]) = {
-    val pairs = new ListBuffer[(Genotype, Genotype)]()
-    var gg = gens
-    while (!gg.tail.isEmpty) {
-      pairs ++= gg.tail.map(g => (gg.head, g))
-      gg = gg.tail
-    }
-    val pair = pairs.toList.minBy(p => {
-      MaxDistanceSeedFinder
-        .hammingDistance(p._1.toIntegralString, p._2.toIntegralString) * Math.sqrt(p._1.freq * p._2.freq)
-    })
-    if (pair._1.freq > pair._2.freq) pair._2
-    else pair._1
-  }
-
   def initThreshold(tr: Double) {
     this.tr = tr
     log("Set threshold: %f".format(tr))
@@ -116,7 +90,7 @@ object KGEM {
     for (g <- gens.par) g.round
   }
 
-  def runEM(gens: Iterable[Genotype]) = {
+  private def runEM(gens: Iterable[Genotype]) = {
     em = new EM(gens.toList, reads.toList)
     em.run
   }
@@ -210,18 +184,5 @@ object KGEM {
       len -= 1
     }
     res
-  }
-
-  /**
-   * Get pqrs for generating clustering string
-   * @return
-   * Matrix with P_qr 's
-   */
-  def getPqrs(gens: Iterable[Genotype]) = {
-    new EM(gens.toList, reads).h_rs
-  }
-
-  def getReads = {
-    reads
   }
 }

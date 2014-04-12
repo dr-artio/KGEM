@@ -15,8 +15,8 @@ object EM {
 }
 
 class EM(gens: List[Genotype], reads: List[Read]) {
-  val rs = (0 until reads.size)
-  val gs = (0 until gens.size)
+  val rs = (0 until reads.size).view
+  val gs = (0 until gens.size).view
   val eps = EM.eps
 
   var h_rs = initHrs
@@ -116,8 +116,9 @@ class EM(gens: List[Genotype], reads: List[Read]) {
     val nfqs = Array.tabulate[Double](gens.size)((i) => {
       rs.view.map(k => pqrs(i)(k) * rFreqs(k)).sum
     })
-     normalize
-    val change = (0 until gens.size).view.map(x => Math.abs(nfqs(x) - freqs(x))) max
+    val sum = nfqs.sum
+    if (sum != 1.0) gs.foreach(x => nfqs(x) /= sum)
+    val change = gs.map(x => Math.abs(nfqs(x) - freqs(x))).max
     for (i <- gs) {
       freqs(i) = nfqs(i)
     }

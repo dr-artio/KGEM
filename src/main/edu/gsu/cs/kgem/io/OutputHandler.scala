@@ -5,6 +5,8 @@ import java.io.{File, PrintStream}
 import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.FastaWriterHelper
 import collection.JavaConversions._
+import edu.gsu.cs.kgem.exec._
+import scala.Some
 
 //import com.apporiented.algorithm.clustering._
 
@@ -42,15 +44,17 @@ object OutputHandler {
    */
   def outputResult(out: PrintStream, gens: Iterable[Genotype], n: Int, clean: (String => String) = (s => s)) = {
     val gg = gens.toIndexedSeq.sortBy(g => -g.freq)
+    var i = 0
     val haplSeqs = gg.map(g => {
       val fn = (g.freq * n).asInstanceOf[Int]
-      val cleanedSeq = clean(g.toIntegralString)
-      List.fill(fn)((cleanedSeq, g.freq))
-    }).flatten.zipWithIndex.map(g => {
-      val dna = new DNASequence(g._1._1)
-      dna.setOriginalHeader("read%d_freq_%.10f".format(g._2, g._1._2))
-      dna
-    })
+      val cleanedSeq = trim(clean(g.toIntegralString), 'N')
+      (0 until fn).map(x => {
+        val dna = new DNASequence(cleanedSeq)
+        dna.setOriginalHeader("read%d".format(i))
+        i += 1
+        dna
+      })
+    }).flatten
     writeFasta(out, haplSeqs)
   }
 
@@ -64,7 +68,7 @@ object OutputHandler {
   def outputHaplotypes(out: PrintStream, gens: Iterable[Genotype], clean: (String => String) = (s => s)) = {
     val gg = gens.view.toIndexedSeq.sortBy(g => -g.freq)
     val haplSeqs = gg.map(g => {
-      val seq = new DNASequence(clean(g.toIntegralString))
+      val seq = new DNASequence(trim(clean(g.toIntegralString), 'N'))
       seq.setOriginalHeader("haplotype%d_freq_%.10f".format(g.ID, g.freq))
       seq
     })
@@ -99,10 +103,11 @@ object OutputHandler {
    * Some((hapOutput: PrintStream, resultsOutput: PrintStream)).
    *
    */
-  def setupOutputDir(dir: File): Option[(PrintStream)] = {
+  def setupOutput(dir: File): Option[(PrintStream)] = {
     // Try to make the output directory. If it fails, return None.
-    if (!dir.exists()) {
-      if (!dir.mkdir()) {
+    val tmp = if (dir.getParentFile == null) new File(System.getProperty(USER_DIR)) else dir
+    if (!tmp.exists()) {
+      if (!tmp.mkdir()) {
         println("Cannot create output directory!")
         return None
       }

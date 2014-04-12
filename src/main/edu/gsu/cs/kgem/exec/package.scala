@@ -28,7 +28,7 @@ package object exec {
   private val FASTA = Array[String](".fas", ".fa", ".fasta")
   val USER_DIR = "user.dir"
   val KGEM_STR = "kGEM version %s: Local Reconstruction for Mixed Viral Populations."
-  val LINE = "-----------------------------------------------------------
+  val LINE = "-----------------------------------------------------------"
   var out: PrintStream = null
   var config: Config = null
   var reads: List[Read] = null
@@ -41,7 +41,7 @@ package object exec {
       case None => sys.exit(1)
       case Some(config: Config) => {
         this.config = config
-        setupOutputDir(config.output.getParentFile) match {
+        setupOutput(config.output) match {
           case None => sys.exit(1)
           case Some((out: PrintStream)) => {
             this.out = out

@@ -7,7 +7,7 @@ import edu.gsu.cs.kgem.exec._
 case class Config(readsFile: File = null, k: Int = 50, threshold: Int = 3,
                   consensusFile: File = null, prThr: Double = -1, epsilon: Double = 0.0025,
                   is_reads: Boolean = false, is_cleaned: Boolean = false,
-                  output: File = new File(System.getProperty(USER_DIR)))
+                  output: File = null)
 
 
 object ArgumentParser {
@@ -45,6 +45,9 @@ object ArgumentParser {
       } text ("Optional Fasta File containing initial seeds.")
       opt[File]('o', "output-filename") action {
         (x, c) => c.copy(output = x)
+      } validate {
+        x => if (x == null) failure("Output file must be specified. Use -o <filepath>")
+          else success
       } text ("File to output results.")
       opt[Unit]('r', "out-as-reads") action {
         (x, c) => c.copy(is_reads = true)
