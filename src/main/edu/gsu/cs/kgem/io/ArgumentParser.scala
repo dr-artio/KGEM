@@ -5,13 +5,12 @@ import scopt.OptionParser
 import edu.gsu.cs.kgem.exec._
 
 case class Config(readsFile: File = null, k: Int = 50, threshold: Int = 3,
-                  consensusFile: File = null, prThr: Double = -1, output: File = new File(System.getProperty(USER_DIR)))
+                  consensusFile: File = null, prThr: Double = -1, epsilon: Double = 0.0025,
+                  is_reads: Boolean = false, is_cleaned: Boolean = false,
+                  output: File = new File(System.getProperty(USER_DIR)))
 
 
 object ArgumentParser {
-
-  private val _singlePattern = """(\A\d+\Z)""".r
-  private val _doublePattern = """(\A\d+:\d+\Z)""".r
 
   def parseArguments(args: Array[String]): Option[Config] = {
     val parser = new OptionParser[Config]("kGEM") {
@@ -28,7 +27,14 @@ object ArgumentParser {
       } text ("Number of initial seeds for clustering.")
       opt[Double]('t', "frequency threshold") action {
         (x, c) => c.copy(prThr = x)
+      } validate {
+        x => if (x >= 0 && x<=0.5) success else failure("Frequency threshold should be 0<=x<=0.5")
       } text ("Frequency threshold")
+      opt[Double]('e', "epsilon") action {
+        (x, c) => c.copy(epsilon = x)
+      } validate {
+        x => if (x >= 0 && x<=0.5) success else failure("Error rate should be 0<=x<=0.5")
+      } text ("Approximate flat error rate")
       opt[Int]('d', "threshold") action {
         (x, c) => c.copy(threshold = x)
       } validate {
@@ -37,9 +43,15 @@ object ArgumentParser {
       opt[File]('g', "consensus-file") action {
         (x, c) => c.copy(consensusFile = x)
       } text ("Optional Fasta File containing initial seeds.")
-      opt[File]('o', "output-dir") action {
+      opt[File]('o', "output-filename") action {
         (x, c) => c.copy(output = x)
-      } text ("Directory to output results.")
+      } text ("File to output results.")
+      opt[Unit]('r', "out-as-reads") action {
+        (x, c) => c.copy(is_reads = true)
+      } text("Use if reads as separate file required (frequencies through counts)")
+      opt[Unit]('u', "unaligned") action {
+        (x, c) => c.copy(is_cleaned = true)
+      } text("Output unaligned (removed alignment information)")
       opt[Unit]('h', "help") action {
         (x, c) => showUsage; sys.exit(0)
       } text ("Prints this help text.")
@@ -49,27 +61,5 @@ object ArgumentParser {
     }
     // parser.parse returns Option[C]
     return parser.parse(args, Config())
-  }
-
-  private def isValidRange(arg: String): Boolean = arg match {
-    case this._doublePattern(c) => {
-      val rng = arg.split(":").map(x => x.toInt)
-      return rng(0) > 0 && rng(1) >= rng(0)
-    }
-    case this._singlePattern(c) => {
-      return arg.toInt > 0
-    }
-    case _ => return false
-  }
-
-  private def parseRange(arg: String): Range.Inclusive = arg match {
-    case this._doublePattern(c) => {
-      val rng = arg.split(":").map(x => x.toInt)
-      (rng(0) to rng(1))
-    }
-    case this._singlePattern(c) => {
-      return (arg.toInt to arg.toInt)
-    }
-    case _ => return (0 to 0)
   }
 }

@@ -62,7 +62,7 @@ object OutputHandler {
    * Collection of haplotypes (Result)
    */
   def outputHaplotypes(out: PrintStream, gens: Iterable[Genotype], clean: (String => String) = (s => s)) = {
-    val gg = gens.toIndexedSeq.sortBy(g => -g.freq)
+    val gg = gens.view.toIndexedSeq.sortBy(g => -g.freq)
     val haplSeqs = gg.map(g => {
       val seq = new DNASequence(clean(g.toIntegralString))
       seq.setOriginalHeader("haplotype%d_freq_%.10f".format(g.ID, g.freq))
@@ -88,14 +88,6 @@ object OutputHandler {
     }
   }
 
-  private def clusteringString(ggs: Iterable[(Genotype, Int)], pqrs: Array[Array[Double]], readIndex: Int) = {
-    val sb = new StringBuffer()
-    for (g <- ggs) {
-      sb.append("_h%d=%s".format(g._1.ID, pqrs(g._2)(readIndex).toString))
-    }
-    sb.toString
-  }
-
   /**
    * Setup the output directory and files.
    * @param dir
@@ -107,7 +99,7 @@ object OutputHandler {
    * Some((hapOutput: PrintStream, resultsOutput: PrintStream)).
    *
    */
-  def setupOutputDir(dir: File): Option[(PrintStream, PrintStream, PrintStream, PrintStream)] = {
+  def setupOutputDir(dir: File): Option[(PrintStream)] = {
     // Try to make the output directory. If it fails, return None.
     if (!dir.exists()) {
       if (!dir.mkdir()) {
@@ -116,33 +108,11 @@ object OutputHandler {
       }
     }
 
-    // Try to open output files. If they fail, return None.
-    val baseName = dir.getAbsolutePath() + File.separator
-    val hapOutputName = "%s%s".format(baseName, "haplotypes.fas")
-    val cleanedHapOutputName = "%s%s".format(baseName, "haplotypes_cleaned.fas")
-    val readsOutputName = "%s%s".format(baseName, "reads.fas")
-    val cleanedReadsOutputName = "%s%s".format(baseName, "reads_cleaned.fas")
-
     try {
-      val hapout = new PrintStream(hapOutputName)
-      try {
-        val readsout = new PrintStream(readsOutputName)
-        try {
-          val hapclout = new PrintStream(cleanedHapOutputName)
-          try {
-            val readclsout = new PrintStream(cleanedReadsOutputName)
-            return Some((hapout, hapclout, readsout, readclsout))
-          } catch {
-            case _: Throwable => println("Cannot create file: " + cleanedReadsOutputName); return None
-          }
-        } catch {
-          case _: Throwable => println("Cannot create file: " + cleanedHapOutputName); return None
-        }
-      } catch {
-        case _: Throwable => println("Cannot create file: " + readsOutputName); return None
-      }
+      val out = new PrintStream(dir)
+      return new Some[PrintStream](out)
     } catch {
-      case _: Throwable => println("Cannot create file: " + hapOutputName); return None
+      case _: Throwable => println("Cannot create file: " + dir.getAbsolutePath); return None
     }
   }
 

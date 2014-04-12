@@ -6,7 +6,7 @@
 
     <groupId>edu.gsu.cs</groupId>
     <artifactId>kgem</artifactId>
-    <version>0.5</version>
+    <version>0.6</version>
     <packaging>jar</packaging>
 
     <name>KGEM</name>
@@ -25,7 +25,7 @@
         </developer>
     </developers>
 
-    <distributionManagement>
+        <distributionManagement>
         <repository>
             <id>internal.repo</id>
             <name>Temporary Staging Repository</name>
@@ -100,19 +100,19 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>org.biojava</groupId>
-            <artifactId>biojava3-core</artifactId>
-            <version>3.0.5</version>
-        </dependency>
-        <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
-            <version>2.10.1</version>
+            <version>2.10.4</version>
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-compiler</artifactId>
-            <version>2.10.1</version>
+            <version>2.10.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.biojava</groupId>
+            <artifactId>biojava3-core</artifactId>
+            <version>3.0.5</version>
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
@@ -128,7 +128,7 @@
         <dependency>
             <groupId>com.github.scopt</groupId>
             <artifactId>scopt_2.10</artifactId>
-            <version>3.1.0</version>
+            <version>3.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.utgenome.thirdparty</groupId>

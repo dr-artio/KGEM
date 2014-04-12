@@ -11,7 +11,7 @@ import edu.gsu.cs.kgem.exec.log
  * estimation for prescribed edu.gsu.cs.kgem.model.
  */
 object EM {
-  val eps = 0.0025
+  var eps = 0.001
 }
 
 class EM(gens: List[Genotype], reads: List[Read]) {
@@ -114,9 +114,10 @@ class EM(gens: List[Genotype], reads: List[Read]) {
    */
   def mStep(pqrs: Array[Array[Double]]): Double = {
     val nfqs = Array.tabulate[Double](gens.size)((i) => {
-      rs.map(k => pqrs(i)(k) * rFreqs(k)).sum
+      rs.view.map(k => pqrs(i)(k) * rFreqs(k)).sum
     })
-    val change = ((for (i <- 0 until gens.size) yield Math.abs(nfqs(i) - freqs(i))) max)
+     normalize
+    val change = (0 until gens.size).view.map(x => Math.abs(nfqs(x) - freqs(x))) max
     for (i <- gs) {
       freqs(i) = nfqs(i)
     }

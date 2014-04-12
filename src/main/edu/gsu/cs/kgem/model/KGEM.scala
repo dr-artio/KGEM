@@ -17,11 +17,9 @@ object KGEM {
   private var reads: List[Read] = null
   private var zreads: List[(Read, Int)] = null
   private var em: EM = null
-  private var tr = 0.0005
+  private var tr = 0.0
   private val pValue = 0.05
   var table: mutable.MutableList[Map[String, Iterable[(Read, Int)]]] = null
-  var loglikelihood = 0.0
-  var maximumAP = 0.0
 
   def initSeeds(n: Int): List[Genotype] = {
     val seeds = sample(reads, n)
@@ -52,7 +50,7 @@ object KGEM {
       val col = collapse.map(g => (g.toIntegralString, g)).toMap
       collapse = col.values.toList
       collapse = thresholdClean(collapse, tr)
-      collapse.zipWithIndex.foreach(pair => genMap += pair)
+      collapse.view.zipWithIndex.foreach(pair => genMap += pair)
       collapsed -= collapse.size
       log("KGEM collapsed %d genotypes".format(collapsed))
     } while (collapsed > 0)
@@ -95,21 +93,6 @@ object KGEM {
     log("Computed threshold: %f".format(tr))
   }
 
-  private def calcLogLikelihood(gens: Iterable[Genotype], genIdxMap: mutable.HashMap[Genotype, Int], alpha: Double) = {
-    val pqrs = em.eStep
-    var ll = 0.0
-    for (readpair <- zreads) {
-      val read = readpair._1
-      val idx = readpair._2
-      ll += (read.freq * math.log(gens.map(gen => gen.freq * pqrs(genIdxMap(gen))(idx)).sum))
-    }
-    if (alpha == 0.0) {
-      this.loglikelihood = ll
-    } else {
-      this.maximumAP = ll
-    }
-  }
-
   private def thresholdClean(gens: Iterable[Genotype], tr: Double) = {
     val cleaned = gens.filter(g => g.freq >= tr)
     cleaned
@@ -140,7 +123,7 @@ object KGEM {
 
   private def alleleFreqEstimation(gens: Iterable[Genotype]) = {
     val pqrs = em.eStep
-    for (g <- gens.zipWithIndex.par) doAlleleFreqEstimation(g._1, pqrs(g._2))
+    for (g <- gens.view.zipWithIndex.par) doAlleleFreqEstimation(g._1, pqrs(g._2))
   }
 
   private def doAlleleFreqEstimation(g: Genotype, pqs: Array[Double]): Unit = {

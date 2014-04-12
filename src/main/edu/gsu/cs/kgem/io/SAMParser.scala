@@ -29,15 +29,15 @@ object SAMParser {
     var index = 0
     val str = sam.getReadString
     val cs = sam.getCigar.getCigarElements
-    for (i <- 0 until sam.getAlignmentStart - 1)
+    for (i <- (0 until sam.getAlignmentStart - 1).view)
       sb.append(S)
     for (cigar: CigarElement <- cs) {
       if (!cigar.getOperator.consumesReadBases) {
-        for (i <- 0 until cigar.getLength)
+        for (i <- (0 until cigar.getLength).view)
           sb.append("-")
       }
       else {
-        for (i <- 0 until cigar.getLength) {
+        for (i <- (0 until cigar.getLength).view) {
           sb.append(str(index))
           index += 1
         }

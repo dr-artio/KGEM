@@ -1,9 +1,8 @@
 package edu.gsu.cs.kgem
 
-import edu.gsu.cs.kgem.model.MaxDistanceSeedFinder
+import edu.gsu.cs.kgem.model._
 import collection.mutable
 import edu.gsu.cs.kgem.io.{ArgumentParser, SAMParser}
-import edu.gsu.cs.kgem.model.{Genotype, KGEM, Read}
 import java.io.{PrintStream, File}
 import net.sf.samtools.{SAMFileHeader, SAMRecord}
 import org.biojava3.core.sequence.io.FastaReaderHelper.readFastaDNASequence
@@ -15,6 +14,8 @@ import edu.gsu.cs.kgem.io.OutputHandler._
 import edu.gsu.cs.kgem.io.Config
 import scala.Some
 import org.biojava3.core.sequence.DNASequence
+import edu.gsu.cs.kgem.io.Config
+import scala.Some
 
 /**
  * Created with IntelliJ IDEA.
@@ -27,11 +28,8 @@ package object exec {
   private val FASTA = Array[String](".fas", ".fa", ".fasta")
   val USER_DIR = "user.dir"
   val KGEM_STR = "kGEM version %s: Local Reconstruction for Mixed Viral Populations."
-  val LINE = "------------------------------------------------------------"
-  var hap: PrintStream = null
-  var hapcl: PrintStream = null
-  var res: PrintStream = null
-  var rescl: PrintStream = null
+  val LINE = "-----------------------------------------------------------
+  var out: PrintStream = null
   var config: Config = null
   var reads: List[Read] = null
   var k: Int = -1
@@ -43,13 +41,10 @@ package object exec {
       case None => sys.exit(1)
       case Some(config: Config) => {
         this.config = config
-        setupOutputDir(config.output) match {
+        setupOutputDir(config.output.getParentFile) match {
           case None => sys.exit(1)
-          case Some((hap: PrintStream, hapcl: PrintStream, res: PrintStream, rescl: PrintStream)) => {
-            this.hap = hap
-            this.hapcl = hapcl
-            this.res = res
-            this.rescl = rescl
+          case Some((out: PrintStream)) => {
+            this.out = out
           }
         }
       }
@@ -67,6 +62,7 @@ package object exec {
   def executeKgem(reads: List[Read] = reads, k: Int = k, threshold: Int = threshold,
                   pr_threshold: Double = config.prThr, consensus_file: File = config.consensusFile) = {
     KGEM.initReads(reads.toList)
+    Genotype.eps = config.epsilon
     val gens = if (consensus_file == null) {
       if (pr_threshold >= 0) KGEM.initThreshold(pr_threshold)
       else KGEM.initThreshold
@@ -80,10 +76,14 @@ package object exec {
   }
 
   protected[exec] def outputResults(gens: List[Genotype], s: Long) = {
-    outputHaplotypes(hap, gens)
-    outputHaplotypes(hapcl, gens, s => s.replaceAll("-", ""))
-    outputResult(res, gens, n)
-    outputResult(rescl, gens, n, s => s.replaceAll("-", ""))
+    def str_modifier: (String => String) = if (config.is_cleaned)
+      s => s.replaceAll("-", "")
+    else
+      s => s
+    if (config.is_reads)
+      outputResult(out, gens, n, str_modifier)
+    else
+      outputHaplotypes(out, gens, str_modifier)
     log("The whole procedure took %.2f minutes".format(((System.currentTimeMillis - s) * 0.0001 / 6)))
     log("Total number of haplotypes is %d".format(gens.size))
     log("bye bye")
