@@ -133,7 +133,7 @@
         <dependency>
             <groupId>org.utgenome.thirdparty</groupId>
             <artifactId>picard</artifactId>
-            <version>1.86.0</version>
+            <version>1.102.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

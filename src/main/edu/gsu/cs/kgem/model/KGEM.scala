@@ -4,7 +4,6 @@ import collection.mutable
 import util.Random
 import org.apache.commons.math3.distribution.BinomialDistribution
 import edu.gsu.cs.kgem.exec.log
-import scala.collection.mutable.ListBuffer
 
 /**
  * Created with IntelliJ IDEA.

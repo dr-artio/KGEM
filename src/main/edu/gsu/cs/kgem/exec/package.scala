@@ -11,8 +11,6 @@ import scala.io.Source.fromFile
 import java.util.Date
 import java.text.SimpleDateFormat
 import edu.gsu.cs.kgem.io.OutputHandler._
-import edu.gsu.cs.kgem.io.Config
-import scala.Some
 import org.biojava3.core.sequence.DNASequence
 import edu.gsu.cs.kgem.io.Config
 import scala.Some
@@ -24,18 +22,58 @@ import scala.Some
  * Time: 3:02 PM
  */
 package object exec {
-  private val sdf = new SimpleDateFormat("[hh:mm:ss a]")
-  private val FASTA = Array[String](".fas", ".fa", ".fasta")
   val USER_DIR = "user.dir"
   val KGEM_STR = "kGEM version %s: Local Reconstruction for Mixed Viral Populations."
-  val LINE = "-----------------------------------------------------------"
-  var out: PrintStream = null
-  var config: Config = null
-  var reads: List[Read] = null
-  var k: Int = -1
-  var threshold: Int = 0
-  var n: Int = 0
 
+  //private values and variables
+  private val sdf = new SimpleDateFormat("[hh:mm:ss a]")
+  private val FASTA = Array[String](".fas", ".fa", ".fasta")
+  private val LINE = "-----------------------------------------------------------"
+  private var out: PrintStream = null
+  private var config: Config = null
+  private var reads: List[Read] = null
+  private var k: Int = -1
+  private var threshold: Int = 0
+  private var n: Int = 0
+  private var seeds: Iterable[Genotype] = null
+
+  //Public methods
+  /**
+   * Method to perform KGEM. When call
+   * from another program as library
+   * all parameters are mandatory
+   * @param reads
+   *              Collection od reads {@see Read}
+   * @param k
+   *          Parameter k in model (number of initial candidates)
+   * @param threshold
+   *                  distance threshold for initial guesses
+   * @param eps
+   *            Error rate (will be taken quarter of value actually sent)
+   *            should be below 0.5 and greater than 0
+   * @param pr_threshold
+   *                     Frequency threshold for dropping rare sequences
+   * @param seeds
+   *              Initial seeds or null if not given
+   * @return
+   *         Set of genotypes corresponding to a given set of reads
+   */
+  def executeKgem(reads: List[Read] = reads, k: Int = k, threshold: Int = threshold, eps: Double = config.epsilon,
+                  pr_threshold: Double = config.prThr, seeds: Iterable[Genotype] = seeds) = {
+    KGEM.initReads(reads.toList)
+    Genotype.eps = eps / 4
+    val gens = if (seeds == null) {
+      if (pr_threshold >= 0) KGEM.initThreshold(pr_threshold)
+      else KGEM.initThreshold
+      val seeds = MaxDistanceSeedFinder.findSeeds(reads, k, threshold)
+      KGEM.run(seeds)
+    } else {
+      KGEM.run(seeds)
+    }
+    gens.toList
+  }
+
+  // Protected section
   protected[exec] def parseArgs(args: Array[String]) = {
     ArgumentParser.parseArguments(args) match {
       case None => sys.exit(1)
@@ -51,28 +89,14 @@ package object exec {
     }
   }
 
-  def initInputData(readsFile: File = config.readsFile) = {
+  protected[exec] def initInputData(readsFile: File = config.readsFile) = {
     if (!FASTA.exists(readsFile.getName.toLowerCase.endsWith)) sys.exit(1)
     reads = initFastaReads(readsFile).toList
     k = config.k
     threshold = config.threshold
     n = reads.map(r => r.freq).sum.toInt
-  }
-
-  def executeKgem(reads: List[Read] = reads, k: Int = k, threshold: Int = threshold,
-                  pr_threshold: Double = config.prThr, consensus_file: File = config.consensusFile) = {
-    KGEM.initReads(reads.toList)
-    Genotype.eps = config.epsilon
-    val gens = if (consensus_file == null) {
-      if (pr_threshold >= 0) KGEM.initThreshold(pr_threshold)
-      else KGEM.initThreshold
-      val seeds = MaxDistanceSeedFinder.findSeeds(reads, k, threshold)
-      KGEM.run(seeds)
-    } else {
-      val seeds = initFastaReads(consensus_file).map(r => new Genotype(r.seq))
-      KGEM.run(seeds)
-    }
-    gens.toList
+    if (config.consensusFile != null)
+      seeds = initFastaReads(config.consensusFile).map(r => new Genotype(r.seq))
   }
 
   protected[exec] def outputResults(gens: List[Genotype], s: Long) = {
@@ -132,7 +156,7 @@ package object exec {
    * @return
    *         Collection of Read objects
    */
-  def convertFastaReads(seqs: Iterable[DNASequence]): Iterable[Read] = {
+  private def convertFastaReads(seqs: Iterable[DNASequence]): Iterable[Read] = {
     val readsMap = flip(seqs.map(en => (en.getOriginalHeader, en.getSequenceAsString)).toMap)
     val samRecords = toSAMRecords(readsMap)
     val reads = toReads(samRecords)

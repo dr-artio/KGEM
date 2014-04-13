@@ -6,7 +6,6 @@ import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.FastaWriterHelper
 import collection.JavaConversions._
 import edu.gsu.cs.kgem.exec._
-import scala.Some
 
 //import com.apporiented.algorithm.clustering._
 
@@ -19,8 +18,6 @@ import scala.Some
  * Time: 3:23 PM
  */
 object OutputHandler {
-  val AMP = "&"
-
   /**
    * Output corrected reads into specified {@see PrintStream}
    * @param out
