@@ -31,6 +31,7 @@ package object exec {
   private val LINE = "-----------------------------------------------------------"
   private var out: PrintStream = null
   private var config: Config = null
+  private var seqs: List[DNASequence] = null
   private var reads: List[Read] = null
   private var k: Int = -1
   private var threshold: Int = 0
@@ -58,14 +59,16 @@ package object exec {
    * @return
    *         Set of genotypes corresponding to a given set of reads
    */
-  def executeKgem(reads: List[Read] = reads, k: Int = k, threshold: Int = threshold, eps: Double = config.epsilon,
+  def executeKgem(reads: List[DNASequence] = seqs, k: Int = k, threshold: Int = threshold, eps: Double = config.epsilon,
                   pr_threshold: Double = config.prThr, seeds: Iterable[Genotype] = seeds) = {
-    KGEM.initReads(reads.toList)
+    this.reads = convertFastaReads(reads).toList
+    n = this.reads.map(r => r.freq).sum.toInt
+    KGEM.initReads(this.reads.toList)
     Genotype.eps = eps / 4
     val gens = if (seeds == null) {
       if (pr_threshold >= 0) KGEM.initThreshold(pr_threshold)
       else KGEM.initThreshold
-      val seeds = MaxDistanceSeedFinder.findSeeds(reads, k, threshold)
+      val seeds = MaxDistanceSeedFinder.findSeeds(this.reads, k, threshold)
       KGEM.run(seeds)
     } else {
       KGEM.run(seeds)
@@ -91,10 +94,9 @@ package object exec {
 
   protected[exec] def initInputData(readsFile: File = config.readsFile) = {
     if (!FASTA.exists(readsFile.getName.toLowerCase.endsWith)) sys.exit(1)
-    reads = initFastaReads(readsFile).toList
+    seqs = readFastaDNASequence(readsFile).values.toList
     k = config.k
     threshold = config.threshold
-    n = reads.map(r => r.freq).sum.toInt
     if (config.consensusFile != null)
       seeds = initFastaReads(config.consensusFile).map(r => new Genotype(r.seq))
   }
@@ -144,8 +146,8 @@ package object exec {
    * Iterable collection of reads
    */
   protected[exec] def initFastaReads(fl: File): Iterable[Read] = {
-    val seqs = readFastaDNASequence(fl)
-    convertFastaReads(seqs.values)
+    val seqs = readFastaDNASequence(fl).values.toList
+    convertFastaReads(seqs)
   }
 
   /**
