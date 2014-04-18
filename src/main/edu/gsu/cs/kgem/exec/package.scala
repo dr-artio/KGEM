@@ -33,8 +33,6 @@ package object exec {
   val LINE = "------------------------------------------------------------"
   var hap: PrintStream = null
   var hapcl: PrintStream = null
-  var res: PrintStream = null
-  var rescl: PrintStream = null
   var clust: PrintStream = null
   var config: Config = null
   var reads: List[Read] = null
@@ -50,11 +48,9 @@ package object exec {
         this.config = config
         setupOutputDir(config.output) match {
           case None => sys.exit(1)
-          case Some((hap: PrintStream, hapcl: PrintStream, res: PrintStream, rescl: PrintStream, clust: PrintStream)) => {
+          case Some((hap: PrintStream, hapcl: PrintStream, clust: PrintStream)) => {
             this.hap = hap
             this.hapcl = hapcl
-            this.res = res
-            this.rescl = rescl
             this.clust = clust
           }
         }
@@ -95,8 +91,8 @@ package object exec {
   protected[exec] def outputResults(gens: List[Genotype], s: Long) = {
     outputHaplotypes(hap, gens)
     outputHaplotypes(hapcl, gens, s => s.replaceAll("-", ""))
-    outputResult(res, gens, n)
-    outputResult(rescl, gens, n, s => s.replaceAll("-", ""))
+//    outputResult(res, gens, n)
+//    outputResult(rescl, gens, n, s => s.replaceAll("-", ""))
 
     log("The whole procedure took %.2f minutes".format(((System.currentTimeMillis - s) * 0.0001 / 6)))
     log("Total number of haplotypes is %d".format(gens.size))

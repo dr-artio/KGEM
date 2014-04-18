@@ -63,9 +63,11 @@ object OutputHandler {
    */
   def outputHaplotypes(out: PrintStream, gens: Iterable[Genotype], clean: (String => String) = (s => s)) = {
     val gg = gens.toIndexedSeq.sortBy(g => -g.freq)
+    var i = 0
     val haplSeqs = gg.map(g => {
       val seq = new DNASequence(clean(g.toIntegralString))
-      seq.setOriginalHeader("haplotype%d_freq_%.10f".format(g.ID, g.freq))
+      seq.setOriginalHeader("haplotype%d_freq_%.10f".format(i, g.freq))
+      i += 1
       seq
     })
     writeFasta(out, haplSeqs)
@@ -106,7 +108,7 @@ object OutputHandler {
    * Some((hapOutput: PrintStream, resultsOutput: PrintStream)).
    *
    */
-  def setupOutputDir(dir: File): Option[(PrintStream, PrintStream, PrintStream, PrintStream, PrintStream)] = {
+  def setupOutputDir(dir: File): Option[(PrintStream, PrintStream, PrintStream)] = {
     // Try to make the output directory. If it fails, return None.
     if (!dir.exists()) {
       if (!dir.mkdir()) {
@@ -118,34 +120,23 @@ object OutputHandler {
     val baseName = dir.getAbsolutePath() + File.separator
     val hapOutputName = "%s%s".format(baseName, "haplotypes.fas")
     val cleanedHapOutputName = "%s%s".format(baseName, "haplotypes_cleaned.fas")
-    val readsOutputName = "%s%s".format(baseName, "reads.fas")
-    val cleanedReadsOutputName = "%s%s".format(baseName, "reads_cleaned.fas")
     val readsClustered = "%s%s".format(baseName, "reads_clustered.fas")
 
     try {
       val hapout = new PrintStream(hapOutputName)
       try {
-        val readsout = new PrintStream(readsOutputName)
+        val hapclout = new PrintStream(cleanedHapOutputName)
         try {
-          val hapclout = new PrintStream(cleanedHapOutputName)
-          try {
-            val readclsout = new PrintStream(cleanedReadsOutputName)
-            try {
-              val readsclust = new PrintStream(readsClustered)
-              return Some((hapout, hapclout, readsout, readclsout, readsclust))
-            } catch {
-              case _: Throwable => println("Cannot create file: " + readsClustered); return None
-            }
-          } catch {
-            case _: Throwable => println("Cannot create file: " + cleanedReadsOutputName); return None
-          }
+          val readsclust = new PrintStream(readsClustered)
+          return Some((hapout, hapclout, readsclust))
         } catch {
-          case _: Throwable => println("Cannot create file: " + cleanedHapOutputName); return None
+          case _: Throwable => println("Cannot create file: " + readsClustered); return None
         }
       } catch {
-        case _: Throwable => println("Cannot create file: " + readsOutputName); return None
+        case _: Throwable => println("Cannot create file: " + cleanedHapOutputName); return None
       }
-    } catch {
+    }
+    catch {
       case _: Throwable => println("Cannot create file: " + hapOutputName); return None
     }
   }
