@@ -5,7 +5,7 @@ import edu.gsu.cs.kgem.model.MaxDistanceSeedFinder.hammingDistance
 import Math.min
 
 /**
- *  Author: Nicholas Mancuso
+ * Author: Nicholas Mancuso
  */
 class MaxDistanceSeedFinderTest extends FlatSpec {
   "The Hamming distance function" should "sum the number of non-space or non-dash " +
@@ -16,7 +16,7 @@ class MaxDistanceSeedFinderTest extends FlatSpec {
     assert(result == 1)
   }
 
-  it should "throw IllegalArgumentException if the arguments are of unequal length" in  {
+  it should "throw IllegalArgumentException if the arguments are of unequal length" in {
     val str1 = "ACCG"
     val str2 = "ACT-TTC"
     intercept[IllegalArgumentException] {

@@ -1,6 +1,7 @@
 package edu.gsu.cs.kgem.io
 
 import org.scalatest.FlatSpec
+
 /**
  * Created with IntelliJ IDEA.
  * User: nicholas
@@ -8,9 +9,9 @@ import org.scalatest.FlatSpec
  * Time: 12:18 PM
  */
 /**
- *  User: nicholas
- *  Date: 7/18/13
- *  Time: 12:18 PM
+ * User: nicholas
+ * Date: 7/18/13
+ * Time: 12:18 PM
  */
 class ArgumentParserTest extends FlatSpec {
 
@@ -35,7 +36,7 @@ class ArgumentParserTest extends FlatSpec {
 
   }
 
-  it should " return empty Option[Config] when bad threshold is supplied"  in {
+  it should " return empty Option[Config] when bad threshold is supplied" in {
     val args = new Array[String](3)
     var config = ArgumentParser.parseArguments(args)
 

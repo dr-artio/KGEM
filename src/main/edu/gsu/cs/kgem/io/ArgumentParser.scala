@@ -28,12 +28,12 @@ object ArgumentParser {
       opt[Double]('t', "frequency threshold") action {
         (x, c) => c.copy(prThr = x)
       } validate {
-        x => if (x >= 0 && x<=0.5) success else failure("Frequency threshold should be 0<=x<=0.5")
+        x => if (x >= 0 && x <= 0.5) success else failure("Frequency threshold should be 0<=x<=0.5")
       } text ("Frequency threshold")
       opt[Double]('e', "epsilon") action {
         (x, c) => c.copy(epsilon = x)
       } validate {
-        x => if (x >= 0 && x<=0.5) success else failure("Error rate should be 0<=x<=0.5")
+        x => if (x >= 0 && x <= 0.5) success else failure("Error rate should be 0<=x<=0.5")
       } text ("Approximate flat error rate")
       opt[Int]('d', "threshold") action {
         (x, c) => c.copy(threshold = x)
@@ -47,14 +47,14 @@ object ArgumentParser {
         (x, c) => c.copy(output = x)
       } validate {
         x => if (x == null) failure("Output file must be specified. Use -o <filepath>")
-          else success
+        else success
       } text ("File to output results.")
       opt[Unit]('r', "out-as-reads") action {
         (x, c) => c.copy(is_reads = true)
-      } text("Use if reads as separate file required (frequencies through counts)")
+      } text ("Use if reads as separate file required (frequencies through counts)")
       opt[Unit]('u', "unaligned") action {
         (x, c) => c.copy(is_cleaned = true)
-      } text("Output unaligned (removed alignment information)")
+      } text ("Output unaligned (removed alignment information)")
       opt[Unit]('h', "help") action {
         (x, c) => showUsage; sys.exit(0)
       } text ("Prints this help text.")

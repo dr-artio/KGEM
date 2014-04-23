@@ -44,20 +44,20 @@ package object exec {
    * from another program as library
    * all parameters are mandatory
    * @param reads
-   *              Collection od reads {@see Read}
+   * Collection od reads { @see Read}
    * @param k
-   *          Parameter k in model (number of initial candidates)
+   * Parameter k in model (number of initial candidates)
    * @param threshold
-   *                  distance threshold for initial guesses
+   * distance threshold for initial guesses
    * @param eps
-   *            Error rate (will be taken quarter of value actually sent)
-   *            should be below 0.5 and greater than 0
+   * Error rate (will be taken quarter of value actually sent)
+   * should be below 0.5 and greater than 0
    * @param pr_threshold
-   *                     Frequency threshold for dropping rare sequences
+   * Frequency threshold for dropping rare sequences
    * @param seeds
-   *              Initial seeds or null if not given
+   * Initial seeds or null if not given
    * @return
-   *         Set of genotypes corresponding to a given set of reads
+   * Set of genotypes corresponding to a given set of reads
    */
   def executeKgem(reads: List[DNASequence] = seqs, k: Int = k, threshold: Int = threshold, eps: Double = config.epsilon,
                   pr_threshold: Double = config.prThr, seeds: Iterable[Genotype] = seeds) = {
@@ -154,9 +154,9 @@ package object exec {
    * Transform DNASequence reads to
    * internal kgem objects
    * @param seqs
-   *             Collection of DNASequence objects
+   * Collection of DNASequence objects
    * @return
-   *         Collection of Read objects
+   * Collection of Read objects
    */
   private def convertFastaReads(seqs: Iterable[DNASequence]): Iterable[Read] = {
     val readsMap = flip(seqs.map(en => (en.getOriginalHeader, en.getSequenceAsString)).toMap)
