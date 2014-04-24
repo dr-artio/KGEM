@@ -35,26 +35,24 @@
                     <target>1.7</target>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.scala-tools</groupId>
-                <artifactId>maven-scala-plugin</artifactId>
-                <version>2.15.2</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <sourceDir>src</sourceDir>
-                    <jvmArgs>
-                        <jvmArg>-Xms1024m</jvmArg>
-                        <jvmArg>-Xmx1g</jvmArg>
-                    </jvmArgs>
-                </configuration>
-            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>org.scalatest</groupId>-->
+                <!--<artifactId>scalatest-maven-plugin</artifactId>-->
+                <!--<version>1.0-M2</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>test</id>-->
+                        <!--<goals>-->
+                            <!--<goal>test</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+                <!--<configuration>-->
+                    <!--<filereports>WDF TestSuite.txt</filereports>-->
+                    <!--<junitxml>.</junitxml>-->
+                    <!--<reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
         </plugins>
     </build>
     <profiles>
@@ -63,6 +61,25 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.scala-tools</groupId>
+                        <artifactId>maven-scala-plugin</artifactId>
+                        <version>2.15.2</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <jvmArgs>
+                                <jvmArg>-Xms1024m</jvmArg>
+                                <jvmArg>-Xmx1g</jvmArg>
+                            </jvmArgs>
+                            <sourceDir>src</sourceDir>
+                        </configuration>
+                    </plugin>
+                    <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-assembly-plugin</artifactId>
                         <version>2.4</version>
@@ -70,17 +87,16 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <!-- <finalName>butterfly</finalName> -->
-                            <appendAssemblyId>true</appendAssemblyId>
                             <archive>
                                 <manifest>
-                                    <mainClass>edu.gsu.cs.butterfly.exec.Main</mainClass>
+                                    <mainClass>edu.gsu.cs.kgem.exec.Main</mainClass>
                                     <addDefaultImplementationEntries>
                                         true
                                     </addDefaultImplementationEntries>
                                 </manifest>
                                 <manifestEntries>
                                     <mode>development</mode>
+
                                     <url>${project.url}</url>
                                     <author>Alex Artyomenko</author>
                                 </manifestEntries>
@@ -88,7 +104,7 @@
                         </configuration>
                         <executions>
                             <execution>
-                                <phase>package</phase>
+                                <phase>compile</phase>
                                 <goals>
                                     <goal>single</goal>
                                 </goals>
