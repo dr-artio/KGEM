@@ -102,7 +102,8 @@ object OutputHandler {
    */
   def setupOutput(dir: File): Option[(PrintStream)] = {
     // Try to make the output directory. If it fails, return None.
-    val tmp = if (dir.getParentFile == null) new File(System.getProperty(USER_DIR)) else dir
+    val parent = dir.getParentFile
+    val tmp = if (parent == null) new File(System.getProperty(USER_DIR)) else parent
     if (!tmp.exists()) {
       if (!tmp.mkdir()) {
         println("Cannot create output directory!")
