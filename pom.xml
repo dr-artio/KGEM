@@ -105,14 +105,14 @@
                         <version>1.7</version>
                         <executions>
                             <execution>
-                                <phase>package</phase>
+                                <phase>compile</phase>
                                 <configuration>
                                     <target>
                                         <exec
                                                 dir="${project.build.directory}"
                                                 executable="scp"
                                                 failonerror="false">
-                                            <arg line="${project.build.finalName}-jar-with-dependencies.jar alan:/home/code/Butterfly/${project.build.finalName}.jar"/>
+                                            <arg line="${project.build.finalName}-jar-with-dependencies.jar alan:/home/code/KGEM/${project.build.finalName}.jar"/>
                                         </exec>
                                     </target>
                                 </configuration>

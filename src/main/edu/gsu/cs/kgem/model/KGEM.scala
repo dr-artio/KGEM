@@ -19,6 +19,7 @@ object KGEM {
   private var tr = 0.0
   private val pValue = 0.05
   var table: mutable.MutableList[Map[String, Iterable[(Read, Int)]]] = null
+  var threshold = 0
 
   private def initSeeds(n: Int): List[Genotype] = {
     val seeds = sample(reads, n)
@@ -58,6 +59,7 @@ object KGEM {
 
   def initThreshold(tr: Double) {
     this.tr = tr
+    this.threshold = (reads.map(r => r.freq).sum * tr).toInt
     log("Set threshold: %f".format(tr))
   }
 
@@ -79,7 +81,7 @@ object KGEM {
       rounding(gens)
       runEM(gens)
       alleleFreqEstimation(gens)
-      log("KGEM iteration #%d done in %.2f minutes".format(i, ((System.currentTimeMillis - st) * 1.0 / 60000)))
+      log("KGEM iteration #%d done in %.2f minutes".format(i, (System.currentTimeMillis - st) * 1.0 / 60000))
       i += 1
     }
     rounding(gens)
@@ -126,7 +128,7 @@ object KGEM {
   private def getThreshold = {
     val n = reads.map(r => r.freq).sum
     val topBound = pValue / n
-    val p = EM.eps
+    val p = Genotype.eps
     var step = (n / 2).toInt
     var x = step
     while (step > 1) {
@@ -134,6 +136,7 @@ object KGEM {
       if (sf(x, n.toInt, p) < topBound) x -= step
       else x += step
     }
+    threshold = x
     x / n
   }
 

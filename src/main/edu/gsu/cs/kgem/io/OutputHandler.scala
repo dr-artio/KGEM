@@ -40,7 +40,7 @@ object OutputHandler {
    * Number of reads
    */
   def outputResult(out: PrintStream, gens: Iterable[Genotype], n: Int, clean: (String => String) = (s => s)) = {
-    val gg = gens.toIndexedSeq.sortBy(g => -g.freq)
+    val gg = gens
     var i = 0
     val haplSeqs = gg.map(g => {
       val fn = (g.freq * n).asInstanceOf[Int]
@@ -63,7 +63,7 @@ object OutputHandler {
    * Collection of haplotypes (Result)
    */
   def outputHaplotypes(out: PrintStream, gens: Iterable[Genotype], clean: (String => String) = (s => s)) = {
-    val gg = gens.view.toIndexedSeq.sortBy(g => -g.freq)
+    val gg = gens
     val haplSeqs = gg.map(g => {
       val seq = new DNASequence(trim(clean(g.toIntegralString), 'N'))
       seq.setOriginalHeader("haplotype%d_freq_%.10f".format(g.ID, g.freq))

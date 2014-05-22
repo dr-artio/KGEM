@@ -30,7 +30,7 @@ package object exec {
   private val FASTA = Array[String](".fas", ".fa", ".fasta")
   private val LINE = "-----------------------------------------------------------"
   private var out: PrintStream = null
-  private var config: Config = null
+  private var config = new Config()
   private var seqs: List[DNASequence] = null
   private var reads: List[Read] = null
   private var k: Int = -1
@@ -60,11 +60,11 @@ package object exec {
    * Set of genotypes corresponding to a given set of reads
    */
   def executeKgem(reads: List[DNASequence] = seqs, k: Int = k, threshold: Int = threshold, eps: Double = config.epsilon,
-                  pr_threshold: Double = config.prThr, seeds: Iterable[Genotype] = seeds) = {
+                  pr_threshold: Double = config.prThr, seeds: Iterable[Genotype] = seeds): List[Genotype] = {
     this.reads = convertFastaReads(reads).toList
     n = this.reads.map(r => r.freq).sum.toInt
     KGEM.initReads(this.reads.toList)
-    Genotype.eps = eps / 4
+    Genotype.eps = eps
     val gens = if (seeds == null) {
       if (pr_threshold >= 0) KGEM.initThreshold(pr_threshold)
       else KGEM.initThreshold
@@ -73,7 +73,7 @@ package object exec {
     } else {
       KGEM.run(seeds)
     }
-    gens.toList
+    gens.view.toIndexedSeq.sortBy(-_.freq).toList
   }
 
   // Protected section

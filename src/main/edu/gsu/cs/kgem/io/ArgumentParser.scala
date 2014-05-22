@@ -33,7 +33,7 @@ object ArgumentParser {
       opt[Double]('e', "epsilon") action {
         (x, c) => c.copy(epsilon = x)
       } validate {
-        x => if (x >= 0 && x <= 0.5) success else failure("Error rate should be 0<=x<=0.5")
+        x => if (x >= 0 && x <= 0.25) success else failure("Error rate should be 0<=x<=0.25")
       } text ("Approximate flat error rate")
       opt[Int]('d', "threshold") action {
         (x, c) => c.copy(threshold = x)
