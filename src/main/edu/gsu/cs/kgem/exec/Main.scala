@@ -12,8 +12,8 @@ package edu.gsu.cs.kgem.exec
 object Main {
   def main(args: Array[String]): Unit = {
     val s = System.currentTimeMillis
-    printGreetings
     parseArgs(args)
+    printGreetings
     log("Reading input files...")
     initInputData()
     log("KGEM started...")

@@ -33,7 +33,7 @@ object MaxDistanceSeedFinder {
     val first = getFirstSeed(readArr)
     var seeds = new mutable.MutableList[Read]()
     seeds += first
-    var distanceMap = readArr.filter(r => !r.equals(first)).map(r => (r, hammingDistance(first, r)))
+    var distanceMap = readArr.view.filter(r => !r.equals(first)).map(r => (r, hammingDistance(first, r))).force
     var maxHD = 0.0
     while (seeds.size < k) {
       if (distanceMap.isEmpty) return seeds.map(r => new Genotype(r.seq))

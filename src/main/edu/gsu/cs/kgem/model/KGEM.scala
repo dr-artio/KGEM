@@ -4,7 +4,6 @@ import collection.mutable
 import util.Random
 import org.apache.commons.math3.distribution.BinomialDistribution
 import edu.gsu.cs.kgem.exec.log
-import scala.collection.mutable.ListBuffer
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,13 +16,12 @@ object KGEM {
   private var reads: List[Read] = null
   private var zreads: List[(Read, Int)] = null
   private var em: EM = null
-  private var tr = 0.0005
+  private var tr = 0.0
   private val pValue = 0.05
   var table: mutable.MutableList[Map[String, Iterable[(Read, Int)]]] = null
-  var loglikelihood = 0.0
-  var maximumAP = 0.0
+  var threshold = 0
 
-  def initSeeds(n: Int): List[Genotype] = {
+  private def initSeeds(n: Int): List[Genotype] = {
     val seeds = sample(reads, n)
     return seeds.map(s => new Genotype(s.seq)).toList
   }
@@ -52,62 +50,22 @@ object KGEM {
       val col = collapse.map(g => (g.toIntegralString, g)).toMap
       collapse = col.values.toList
       collapse = thresholdClean(collapse, tr)
-      collapse.zipWithIndex.foreach(pair => genMap += pair)
+      collapse.view.zipWithIndex.foreach(pair => genMap += pair)
       collapsed -= collapse.size
       log("KGEM collapsed %d genotypes".format(collapsed))
     } while (collapsed > 0)
     collapse
   }
 
-  def runCl(gens: Iterable[Genotype], k: Int, alpha: Double = 0) = {
-    var clusters = run(gens)
-    if (clusters.size > k)
-      do {
-        val bg = getBadGenotype(clusters)
-        clusters = clusters.filter(_ != bg)
-        clusters = run(clusters)
-      } while (clusters.size > k)
-    clusters
-  }
-
-  def getBadGenotype(gens: Iterable[Genotype]) = {
-    val pairs = new ListBuffer[(Genotype, Genotype)]()
-    var gg = gens
-    while (!gg.tail.isEmpty) {
-      pairs ++= gg.tail.map(g => (gg.head, g))
-      gg = gg.tail
-    }
-    val pair = pairs.toList.minBy(p => {
-      MaxDistanceSeedFinder
-        .hammingDistance(p._1.toIntegralString, p._2.toIntegralString) * Math.sqrt(p._1.freq * p._2.freq)
-    })
-    if (pair._1.freq > pair._2.freq) pair._2
-    else pair._1
-  }
-
   def initThreshold(tr: Double) {
     this.tr = tr
+    this.threshold = (reads.map(r => r.freq).sum * tr).toInt
     log("Set threshold: %f".format(tr))
   }
 
   def initThreshold = {
     this.tr = getThreshold
     log("Computed threshold: %f".format(tr))
-  }
-
-  private def calcLogLikelihood(gens: Iterable[Genotype], genIdxMap: mutable.HashMap[Genotype, Int], alpha: Double) = {
-    val pqrs = em.eStep
-    var ll = 0.0
-    for (readpair <- zreads) {
-      val read = readpair._1
-      val idx = readpair._2
-      ll += (read.freq * math.log(gens.map(gen => gen.freq * pqrs(genIdxMap(gen))(idx)).sum))
-    }
-    if (alpha == 0.0) {
-      this.loglikelihood = ll
-    } else {
-      this.maximumAP = ll
-    }
   }
 
   private def thresholdClean(gens: Iterable[Genotype], tr: Double) = {
@@ -123,7 +81,7 @@ object KGEM {
       rounding(gens)
       runEM(gens)
       alleleFreqEstimation(gens)
-      log("KGEM iteration #%d done in %.2f minutes".format(i, ((System.currentTimeMillis - st) * 1.0 / 60000)))
+      log("KGEM iteration #%d done in %.2f minutes".format(i, (System.currentTimeMillis - st) * 1.0 / 60000))
       i += 1
     }
     rounding(gens)
@@ -133,14 +91,14 @@ object KGEM {
     for (g <- gens.par) g.round
   }
 
-  def runEM(gens: Iterable[Genotype]) = {
+  private def runEM(gens: Iterable[Genotype]) = {
     em = new EM(gens.toList, reads.toList)
     em.run
   }
 
   private def alleleFreqEstimation(gens: Iterable[Genotype]) = {
     val pqrs = em.eStep
-    for (g <- gens.zipWithIndex.par) doAlleleFreqEstimation(g._1, pqrs(g._2))
+    for (g <- gens.view.zipWithIndex.par) doAlleleFreqEstimation(g._1, pqrs(g._2))
   }
 
   private def doAlleleFreqEstimation(g: Genotype, pqs: Array[Double]): Unit = {
@@ -170,7 +128,7 @@ object KGEM {
   private def getThreshold = {
     val n = reads.map(r => r.freq).sum
     val topBound = pValue / n
-    val p = EM.eps
+    val p = Genotype.eps
     var step = (n / 2).toInt
     var x = step
     while (step > 1) {
@@ -178,6 +136,7 @@ object KGEM {
       if (sf(x, n.toInt, p) < topBound) x -= step
       else x += step
     }
+    threshold = x
     x / n
   }
 
@@ -227,18 +186,5 @@ object KGEM {
       len -= 1
     }
     res
-  }
-
-  /**
-   * Get pqrs for generating clustering string
-   * @return
-   * Matrix with P_qr 's
-   */
-  def getPqrs(gens: Iterable[Genotype]) = {
-    new EM(gens.toList, reads).h_rs
-  }
-
-  def getReads = {
-    reads
   }
 }
