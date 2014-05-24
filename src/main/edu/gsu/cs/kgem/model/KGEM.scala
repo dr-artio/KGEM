@@ -26,7 +26,7 @@ object KGEM {
 
   def initSeeds(n: Int): List[Genotype] = {
     val seeds = sample(reads, n)
-    return seeds.map(s => new Genotype(s.seq)).toList
+    seeds.map(s => new Genotype(s.seq)).toList
   }
 
   def initReads(reads: List[Read]) = {
@@ -96,7 +96,7 @@ object KGEM {
     log("Set threshold: %f".format(tr))
   }
 
-  def initThreshold = {
+  def initThreshold() = {
     this.tr = getThreshold
     log("Computed threshold: %f".format(tr))
   }
@@ -130,7 +130,7 @@ object KGEM {
       if (alpha > 0) runEM(gens)
       else runEM(gens)
       alleleFreqEstimation(gens)
-      log("KGEM iteration #%d done in %.2f minutes".format(i, ((System.currentTimeMillis - st) * 1.0 / 60000)))
+      log("KGEM iteration #%d done in %.2f minutes".format(i, (System.currentTimeMillis - st) * 1.0 / 60000))
       i += 1
     }
     rounding(gens)
@@ -226,7 +226,7 @@ object KGEM {
     var len = iter.size
     val iterator = iter.iterator
     while (needed > 0 && iterator.hasNext) {
-      val item = iterator.next
+      val item = iterator.next()
       if (rnd.nextInt(len) < needed) {
         res += item
         needed -= 1

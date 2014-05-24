@@ -44,7 +44,7 @@ object MaxDistanceSeedFinder {
       distanceMap = distanceMap.map(e => (e._1, min(e._2, hammingDistance(cur._1, e._1))))
     }
     log("Final max Hamming Distance: %.0f".format(maxHD))
-    return seeds.map(r => new Genotype(r.seq))
+    seeds.map(r => new Genotype(r.seq))
   }
 
   /**
@@ -102,6 +102,6 @@ object MaxDistanceSeedFinder {
         r += 1
       }
     }
-    return r
+    r
   }
 }
