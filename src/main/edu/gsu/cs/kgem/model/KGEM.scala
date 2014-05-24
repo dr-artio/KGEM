@@ -37,8 +37,8 @@ object KGEM {
     var i = 0
     val nucls = Genotype.sMap.keys
     while (i < ml) {
-      table += ((for (nucl <- nucls)
-      yield (nucl, zreads.filter(r => r._1.seq(i).equals(nucl(0))))).toMap)
+      table += (for (nucl <- nucls)
+      yield (nucl, zreads.filter(r => r._1.seq(i).equals(nucl(0))))).toMap
       i += 1
     }
   }
