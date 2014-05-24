@@ -44,7 +44,7 @@ object MaxDistanceSeedFinder {
       distanceMap = distanceMap.map(e => (e._1, min(e._2, hammingDistance(cur._1, e._1))))
     }
     log("Final max Hamming Distance: %.0f".format(maxHD))
-    return seeds.map(r => new Genotype(r.seq))
+    seeds.map(r => new Genotype(r.seq))
   }
 
   /**
@@ -55,11 +55,12 @@ object MaxDistanceSeedFinder {
    * one read
    */
   private def getFirstSeed(readArr: Array[Read]) = {
-    val mc = readArr.map(r => r.freq).max
-    val candidates = readArr.filter(r => r.freq == mc)
-    val s = candidates.size
-    val rnd = new Random()
-    candidates(rnd.nextInt(s))
+    val mc = readArr.map(r => r.seq.count(_ != 'N')).max
+    val candidates = readArr.filter(r => r.seq.count(_ != 'N') == mc)
+    candidates.maxBy(_.freq)
+    //val s = candidates.size
+    //val rnd = new Random()
+    //candidates(rnd.nextInt(s))
   }
 
   /**
@@ -101,6 +102,6 @@ object MaxDistanceSeedFinder {
         r += 1
       }
     }
-    return r
+    r
   }
 }
