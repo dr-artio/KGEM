@@ -4,6 +4,7 @@ import collection.mutable
 import util.Random
 import org.apache.commons.math3.distribution.BinomialDistribution
 import edu.gsu.cs.kgem.exec.log
+import edu.gsu.cs.kgem.exec.numproc
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,7 +24,7 @@ object KGEM {
 
   private def initSeeds(n: Int): List[Genotype] = {
     val seeds = sample(reads, n)
-    return seeds.map(s => new Genotype(s.seq)).toList
+    seeds.map(s => new Genotype(s.seq)).toList
   }
 
   def initReads(reads: List[Read]) = {
@@ -34,8 +35,8 @@ object KGEM {
     var i = 0
     val nucls = Genotype.sMap.keys
     while (i < ml) {
-      table += ((for (nucl <- nucls)
-      yield (nucl, zreads.filter(r => r._1.seq(i).equals(nucl(0))))).toMap)
+      table += nucls.map(nucl =>
+      (nucl, zreads.filter(r => r._1.seq(i).equals(nucl(0))))).toMap
       i += 1
     }
   }
@@ -63,7 +64,7 @@ object KGEM {
     log("Set threshold: %f".format(tr))
   }
 
-  def initThreshold = {
+  def initThreshold() = {
     this.tr = getThreshold
     log("Computed threshold: %f".format(tr))
   }
@@ -88,7 +89,8 @@ object KGEM {
   }
 
   private def rounding(gens: Iterable[Genotype]) = {
-    for (g <- gens.par) g.round
+    log("Rounding")
+    for (g <- gens) g.round
   }
 
   private def runEM(gens: Iterable[Genotype]) = {
@@ -98,7 +100,10 @@ object KGEM {
 
   private def alleleFreqEstimation(gens: Iterable[Genotype]) = {
     val pqrs = em.eStep
-    for (g <- gens.view.zipWithIndex.par) doAlleleFreqEstimation(g._1, pqrs(g._2))
+    val pargens =  gens.view.zipWithIndex.par
+    pargens.tasksupport = numproc
+    log("pl:%d".format(pargens.tasksupport.parallelismLevel))
+    for (g <- pargens) doAlleleFreqEstimation(g._1, pqrs(g._2))
   }
 
   private def doAlleleFreqEstimation(g: Genotype, pqs: Array[Double]): Unit = {
@@ -178,7 +183,7 @@ object KGEM {
     var len = iter.size
     val iterator = iter.iterator
     while (needed > 0 && iterator.hasNext) {
-      val item = iterator.next
+      val item = iterator.next()
       if (rnd.nextInt(len) < needed) {
         res += item
         needed -= 1

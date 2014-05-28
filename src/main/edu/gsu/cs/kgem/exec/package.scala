@@ -14,6 +14,8 @@ import edu.gsu.cs.kgem.io.OutputHandler._
 import org.biojava3.core.sequence.DNASequence
 import edu.gsu.cs.kgem.io.Config
 import scala.Some
+import scala.collection.parallel.{ForkJoinTasks, ForkJoinTaskSupport, TaskSupport}
+import scala.concurrent.forkjoin.ForkJoinPool
 
 /**
  * Created with IntelliJ IDEA.
@@ -24,6 +26,7 @@ import scala.Some
 package object exec {
   val USER_DIR = "user.dir"
   val KGEM_STR = "kGEM version %s: Local Reconstruction for Mixed Viral Populations."
+  var numproc: TaskSupport = null
 
   //private values and variables
   private val sdf = new SimpleDateFormat("[hh:mm:ss a]")
@@ -59,15 +62,25 @@ package object exec {
    * @return
    * Set of genotypes corresponding to a given set of reads
    */
-  def executeKgem(reads: List[DNASequence] = seqs, k: Int = k, threshold: Int = threshold, eps: Double = config.epsilon,
-                  pr_threshold: Double = config.prThr, seeds: Iterable[Genotype] = seeds): List[Genotype] = {
+  def executeKgem(reads: List[DNASequence] = seqs, k: Int = k, numproc: TaskSupport = config.numproc, threshold: Int = threshold,
+                  eps: Double = config.epsilon, pr_threshold: Double = config.prThr,
+                  seeds: Iterable[Genotype] = seeds): List[Genotype] = {
+    if (numproc != null ) {
+      this.numproc = numproc
+      log("Numprocs set %d.".format(this.numproc.parallelismLevel))
+      setParallelismGlobally(this.numproc.parallelismLevel)
+    }
     this.reads = convertFastaReads(reads).toList
     n = this.reads.map(r => r.freq).sum.toInt
+    log("Pre")
     KGEM.initReads(this.reads.toList)
+    log("Pre")
     Genotype.eps = eps
     val gens = if (seeds == null) {
+
       if (pr_threshold >= 0) KGEM.initThreshold(pr_threshold)
-      else KGEM.initThreshold
+      else KGEM.initThreshold()
+
       val seeds = MaxDistanceSeedFinder.findSeeds(this.reads, k, threshold)
       KGEM.run(seeds)
     } else {
@@ -80,16 +93,28 @@ package object exec {
   protected[exec] def parseArgs(args: Array[String]) = {
     ArgumentParser.parseArguments(args) match {
       case None => sys.exit(1)
-      case Some(config: Config) => {
+      case Some(config: Config) =>
         this.config = config
         setupOutput(config.output) match {
           case None => sys.exit(1)
-          case Some((out: PrintStream)) => {
-            this.out = out
-          }
+          case Some((out: PrintStream)) => this.out = out
         }
-      }
     }
+  }
+
+  protected[exec] def setParallelismGlobally(numThreads: Int): Unit = {
+    val parPkgObj = scala.collection.parallel.`package`
+    val defaultTaskSupportField = parPkgObj.getClass.getDeclaredFields.find{
+      _.getName == "defaultTaskSupport"
+    }.get
+
+    defaultTaskSupportField.setAccessible(true)
+    defaultTaskSupportField.set(
+      parPkgObj,
+      new scala.collection.parallel.ForkJoinTaskSupport(
+        new scala.concurrent.forkjoin.ForkJoinPool(numThreads)
+      )
+    )
   }
 
   protected[exec] def initInputData(readsFile: File = config.readsFile) = {
@@ -110,7 +135,7 @@ package object exec {
       outputResult(out, gens, n, str_modifier)
     else
       outputHaplotypes(out, gens, str_modifier)
-    log("The whole procedure took %.2f minutes".format(((System.currentTimeMillis - s) * 0.0001 / 6)))
+    log("The whole procedure took %.2f minutes".format((System.currentTimeMillis - s) * 0.0001 / 6))
     log("Total number of haplotypes is %d".format(gens.size))
     log("bye bye")
   }
@@ -180,7 +205,7 @@ package object exec {
    */
   @deprecated
   protected[exec] def initTxtReads(fl: File): Iterable[Read] = {
-    val lines = fromFile(fl).getLines
+    val lines = fromFile(fl).getLines()
     val readsMap = flip(lines.zipWithIndex.map(s => ("Read" + s._2, s._1)).toMap)
     val samRecords = toSAMRecords(readsMap)
     val reads = toReads(samRecords)
@@ -197,7 +222,7 @@ package object exec {
    */
   private def initReadFreqs(reads: Iterable[Read], readsMap: Map[String, Set[String]]) {
     reads foreach (r => {
-      r.freq = readsMap(r.seq).size;
+      r.freq = readsMap(r.seq).size
       r.ids = readsMap(r.seq)
     })
   }
@@ -276,20 +301,18 @@ package object exec {
    * @return
    * SAMRecords collection
    */
-  @deprecated
   private def toSAMRecords(reads: Map[String, Set[String]]) = {
     for (r <- reads)
     yield toSAMRecord(r)
   }
 
   /**
-   * Deserialize one {@see SAMRecord} from {@see String}
+   * Deserialize one SAMRecord from String
    * @param st
    * { @see SAMRecord} in { @see String}
    * @return
    * Wrapped { @see SAMRecord} object
    */
-  @deprecated
   private def toSAMRecord(st: (String, Set[String])) = {
     val sam = new SAMRecord(new SAMFileHeader)
     sam.setAlignmentStart(1)
@@ -297,7 +320,7 @@ package object exec {
     sam
   }
 
-  protected[exec] def printGreetings = {
+  protected[exec] def printGreetings() = {
     log(LINE)
     log(KGEM_STR.format(Main.getClass.getPackage.getImplementationVersion))
     log(LINE)
