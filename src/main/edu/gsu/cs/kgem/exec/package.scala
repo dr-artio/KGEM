@@ -14,8 +14,7 @@ import edu.gsu.cs.kgem.io.OutputHandler._
 import org.biojava3.core.sequence.DNASequence
 import edu.gsu.cs.kgem.io.Config
 import scala.Some
-import scala.collection.parallel.{ForkJoinTasks, ForkJoinTaskSupport, TaskSupport}
-import scala.concurrent.forkjoin.ForkJoinPool
+import scala.collection.parallel.TaskSupport
 
 /**
  * Created with IntelliJ IDEA.
@@ -65,21 +64,18 @@ package object exec {
   def executeKgem(reads: List[DNASequence] = seqs, k: Int = k, numproc: TaskSupport = config.numproc, threshold: Int = threshold,
                   eps: Double = config.epsilon, pr_threshold: Double = config.prThr,
                   seeds: Iterable[Genotype] = seeds): List[Genotype] = {
-    if (numproc != null ) {
-      this.numproc = numproc
-      log("Numprocs set %d.".format(this.numproc.parallelismLevel))
-      setParallelismGlobally(this.numproc.parallelismLevel)
-    }
+    //    if (numproc != null ) {
+    //      this.numproc = numproc
+    //      log("numproc set %d.".format(this.numproc.parallelismLevel))
+    //    }
     this.reads = convertFastaReads(reads).toList
     n = this.reads.map(r => r.freq).sum.toInt
-    log("Pre")
     KGEM.initReads(this.reads.toList)
-    log("Pre")
     Genotype.eps = eps
     val gens = if (seeds == null) {
 
       if (pr_threshold >= 0) KGEM.initThreshold(pr_threshold)
-      else KGEM.initThreshold()
+      else KGEM.initThreshold(reads.head.getLength)
 
       val seeds = MaxDistanceSeedFinder.findSeeds(this.reads, k, threshold)
       KGEM.run(seeds)
@@ -102,22 +98,20 @@ package object exec {
     }
   }
 
-  protected[exec] def setParallelismGlobally(numThreads: Int): Unit = {
+  protected[exec] def setParallelismGlobally(tsObject: TaskSupport): Unit = {
+    if (tsObject == null) return
+
     val parPkgObj = scala.collection.parallel.`package`
-    val defaultTaskSupportField = parPkgObj.getClass.getDeclaredFields.find{
+    val defaultTaskSupportField = parPkgObj.getClass.getDeclaredFields.find {
       _.getName == "defaultTaskSupport"
     }.get
 
     defaultTaskSupportField.setAccessible(true)
-    defaultTaskSupportField.set(
-      parPkgObj,
-      new scala.collection.parallel.ForkJoinTaskSupport(
-        new scala.concurrent.forkjoin.ForkJoinPool(numThreads)
-      )
-    )
+    defaultTaskSupportField.set(parPkgObj, tsObject)
   }
 
   protected[exec] def initInputData(readsFile: File = config.readsFile) = {
+    setParallelismGlobally(this.config.numproc)
     if (!FASTA.exists(readsFile.getName.toLowerCase.endsWith)) sys.exit(1)
     seqs = readFastaDNASequence(readsFile).values.toList
     k = config.k

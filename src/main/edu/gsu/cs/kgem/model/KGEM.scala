@@ -4,7 +4,6 @@ import collection.mutable
 import util.Random
 import org.apache.commons.math3.distribution.BinomialDistribution
 import edu.gsu.cs.kgem.exec.log
-import edu.gsu.cs.kgem.exec.numproc
 
 /**
  * Created with IntelliJ IDEA.
@@ -36,7 +35,7 @@ object KGEM {
     val nucls = Genotype.sMap.keys
     while (i < ml) {
       table += nucls.map(nucl =>
-      (nucl, zreads.filter(r => r._1.seq(i).equals(nucl(0))))).toMap
+        (nucl, zreads.filter(r => r._1.seq(i).equals(nucl(0))))).toMap
       i += 1
     }
   }
@@ -64,8 +63,8 @@ object KGEM {
     log("Set threshold: %f".format(tr))
   }
 
-  def initThreshold() = {
-    this.tr = getThreshold
+  def initThreshold(length: Int) = {
+    this.tr = getThreshold(length)
     log("Computed threshold: %f".format(tr))
   }
 
@@ -89,8 +88,7 @@ object KGEM {
   }
 
   private def rounding(gens: Iterable[Genotype]) = {
-    log("Rounding")
-    for (g <- gens) g.round
+    for (g <- gens.par) g.round
   }
 
   private def runEM(gens: Iterable[Genotype]) = {
@@ -100,9 +98,7 @@ object KGEM {
 
   private def alleleFreqEstimation(gens: Iterable[Genotype]) = {
     val pqrs = em.eStep
-    val pargens =  gens.view.zipWithIndex.par
-    pargens.tasksupport = numproc
-    log("pl:%d".format(pargens.tasksupport.parallelismLevel))
+    val pargens = gens.view.zipWithIndex.par
     for (g <- pargens) doAlleleFreqEstimation(g._1, pqrs(g._2))
   }
 
@@ -123,22 +119,23 @@ object KGEM {
   }
 
   /**
-   * Finds argmin_x((F(x) < pValue/n), where
-   * F(x) is survival function of binomial distribution
+   * Finds argmin_x((1-p_i)**L > 1 - pValue), where
+   * p_i = F(x) is survival function of binomial distribution
    * pValue - measure of randomness (Default: 5% hardcoded)
    * n - number of reads in a given sample
    * @return
    * Estimated threshold
    */
-  private def getThreshold = {
-    val n = reads.map(r => r.freq).sum
-    val topBound = pValue / n
+  private def getThreshold(L: Int) = {
+    val n = reads.view.map(_.freq).sum
+    val topBound = 1 - pValue
     val p = Genotype.eps
     var step = (n / 2).toInt
     var x = step
     while (step > 1) {
       step /= 2
-      if (sf(x, n.toInt, p) < topBound) x -= step
+      val p_i = sf(x, n.toInt, p)
+      if (Math.pow(1 - p_i, L) > topBound) x -= step
       else x += step
     }
     threshold = x

@@ -6,9 +6,6 @@ import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.FastaWriterHelper
 import collection.JavaConversions._
 import edu.gsu.cs.kgem.exec._
-
-//import com.apporiented.algorithm.clustering._
-
 import scala.Some
 
 /**
@@ -18,6 +15,8 @@ import scala.Some
  * Time: 3:23 PM
  */
 object OutputHandler {
+  val DEFAULT_FILENAME = "haplotypes.fa"
+
   /**
    * Output corrected reads into specified {@see PrintStream}
    * @param out
@@ -39,7 +38,7 @@ object OutputHandler {
    * @param n
    * Number of reads
    */
-  def outputResult(out: PrintStream, gens: Iterable[Genotype], n: Int, clean: (String => String) = (s => s)) = {
+  def outputResult(out: PrintStream, gens: Iterable[Genotype], n: Int, clean: (String => String) = s => s) = {
     val gg = gens
     var i = 0
     val haplSeqs = gg.map(g => {
@@ -62,7 +61,7 @@ object OutputHandler {
    * @param gens
    * Collection of haplotypes (Result)
    */
-  def outputHaplotypes(out: PrintStream, gens: Iterable[Genotype], clean: (String => String) = (s => s)) = {
+  def outputHaplotypes(out: PrintStream, gens: Iterable[Genotype], clean: (String => String) = s => s) = {
     val gg = gens
     val haplSeqs = gg.map(g => {
       val seq = new DNASequence(trim(clean(g.toIntegralString), 'N'))
@@ -102,7 +101,8 @@ object OutputHandler {
    */
   def setupOutput(dir: File): Option[(PrintStream)] = {
     // Try to make the output directory. If it fails, return None.
-    val parent = dir.getParentFile
+    val file = if (dir != null) dir else new File(DEFAULT_FILENAME)
+    val parent = file.getParentFile
     val tmp = if (parent == null) new File(System.getProperty(USER_DIR)) else parent
     if (!tmp.exists()) {
       if (!tmp.mkdir()) {
@@ -112,10 +112,10 @@ object OutputHandler {
     }
 
     try {
-      val out = new PrintStream(dir)
-      return new Some[PrintStream](out)
+      val out = new PrintStream(file)
+      new Some[PrintStream](out)
     } catch {
-      case _: Throwable => println("Cannot create file: " + dir.getAbsolutePath); return None
+      case _: Throwable => log("Cannot create file: " + file.getAbsolutePath); None
     }
   }
 
@@ -139,7 +139,7 @@ object OutputHandler {
     val k2 = Set(m2.keysIterator.toList: _*)
     val intersection = k1 & k2
 
-    val r1 = for (key <- intersection) yield (key -> (m1(key) ++ m2(key)))
+    val r1 = for (key <- intersection) yield key -> (m1(key) ++ m2(key))
     val r2 = m1.filterKeys(!intersection.contains(_)) ++ m2.filterKeys(!intersection.contains(_))
     r2 ++ r1
   }

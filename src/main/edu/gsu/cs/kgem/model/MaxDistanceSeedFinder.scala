@@ -1,7 +1,6 @@
 package edu.gsu.cs.kgem.model
 
 import edu.gsu.cs.kgem.exec.log
-import java.util.Random
 import scala.collection.mutable
 import Math.min
 
