@@ -5,9 +5,7 @@ import java.io.{File, PrintStream}
 import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.FastaWriterHelper
 import collection.JavaConversions._
-
-//import com.apporiented.algorithm.clustering._
-
+import edu.gsu.cs.kgem.exec._
 import scala.Some
 
 /**
@@ -17,7 +15,6 @@ import scala.Some
  * Time: 3:23 PM
  */
 object OutputHandler {
-  val AMP = "&"
 
   /**
    * Output corrected reads into specified {@see PrintStream}
@@ -40,17 +37,19 @@ object OutputHandler {
    * @param n
    * Number of reads
    */
-  def outputResult(out: PrintStream, gens: Iterable[Genotype], n: Int, clean: (String => String) = (s => s)) = {
-    val gg = gens.toIndexedSeq.sortBy(g => -g.freq)
+  def outputResult(out: PrintStream, gens: Iterable[Genotype], n: Int, clean: (String => String) = s => s) = {
+    val gg = gens
+    var i = 0
     val haplSeqs = gg.map(g => {
       val fn = (g.freq * n).asInstanceOf[Int]
-      val cleanedSeq = clean(g.toIntegralString)
-      List.fill(fn)((cleanedSeq, g.freq))
-    }).flatten.zipWithIndex.map(g => {
-      val dna = new DNASequence(g._1._1)
-      dna.setOriginalHeader("read%d_freq_%.10f".format(g._2, g._1._2))
-      dna
-    })
+      val cleanedSeq = trim(clean(g.toIntegralString), 'N')
+      (0 until fn).map(x => {
+        val dna = new DNASequence(cleanedSeq)
+        dna.setOriginalHeader("read%d".format(i))
+        i += 1
+        dna
+      })
+    }).flatten
     writeFasta(out, haplSeqs)
   }
 
@@ -61,16 +60,19 @@ object OutputHandler {
    * @param gens
    * Collection of haplotypes (Result)
    */
-  def outputHaplotypes(out: PrintStream, gens: Iterable[Genotype], clean: (String => String) = (s => s)) = {
-    val gg = gens.toIndexedSeq.sortBy(g => -g.freq)
-    var i = 0
+  def outputHaplotypes(out: PrintStream, gens: Iterable[Genotype], clean: (String => String) = s => s) = {
+    val gg = gens
     val haplSeqs = gg.map(g => {
-      val seq = new DNASequence(clean(g.toIntegralString))
-      seq.setOriginalHeader("haplotype%d_freq_%.10f".format(i, g.freq))
-      i += 1
+      val seq = new DNASequence(trim(clean(g.toIntegralString), 'N'))
+      seq.setOriginalHeader("haplotype%d_freq_%.10f".format(g.ID, g.freq))
       seq
     })
     writeFasta(out, haplSeqs)
+  }
+
+  def outputClusteredReads(out: PrintStream, seq: Iterable[DNASequence]) = {
+    if (seq != null)
+      writeFasta(out, seq)
   }
 
   private def trim(str: String, char: Char): String = {
@@ -81,20 +83,12 @@ object OutputHandler {
                              (implicit v1: M[M[A]] => Seq[M[A]], v2: M[A] => Seq[A]): Seq[A] =
     matrix.map(_(colIdx))
 
-  def writeFasta(out: PrintStream, seq: Iterable[DNASequence]) {
+  private def writeFasta(out: PrintStream, seq: Iterable[DNASequence]) {
     try {
       FastaWriterHelper.writeNucleotideSequence(out, seq)
     } finally {
       out.close()
     }
-  }
-
-  private def clusteringString(ggs: Iterable[(Genotype, Int)], pqrs: Array[Array[Double]], readIndex: Int) = {
-    val sb = new StringBuffer()
-    for (g <- ggs) {
-      sb.append("_h%d=%s".format(g._1.ID, pqrs(g._2)(readIndex).toString))
-    }
-    sb.toString
   }
 
   /**
@@ -108,36 +102,32 @@ object OutputHandler {
    * Some((hapOutput: PrintStream, resultsOutput: PrintStream)).
    *
    */
-  def setupOutputDir(dir: File): Option[(PrintStream, PrintStream, PrintStream)] = {
+  def setupOutput(dir: File, is_reads: Boolean, is_cleaned: Boolean): Option[(PrintStream, PrintStream)] = {
     // Try to make the output directory. If it fails, return None.
-    if (!dir.exists()) {
-      if (!dir.mkdir()) {
-        println("Cannot create output directory!")
-        return None
-      }
+    val file = if (dir != null) dir else new File(System.getProperty(USER_DIR))
+    val tmp = file
+    if (!tmp.exists()) if (!tmp.mkdir()) {
+      println("Cannot create output directory!")
+      return None
     }
 
-    val baseName = dir.getAbsolutePath() + File.separator
-    val hapOutputName = "%s%s".format(baseName, "haplotypes.fas")
-    val cleanedHapOutputName = "%s%s".format(baseName, "haplotypes_cleaned.fas")
-    val readsClustered = "%s%s".format(baseName, "reads_clustered.fas")
+    // Try to open output files. If they fail, return None.
+    val baseName = file.getAbsolutePath + File.separator
+    val mainOutputName = "%s%s%s.fas".format(baseName,
+      if (is_reads) "reads" else "haplotypes",
+      if (is_cleaned) "_cleaned" else "")
+    val clusteredReadsOutputName = "%s%s".format(baseName, "reads_clustered.fas")
 
     try {
-      val hapout = new PrintStream(hapOutputName)
+      val mainout = new PrintStream(mainOutputName)
       try {
-        val hapclout = new PrintStream(cleanedHapOutputName)
-        try {
-          val readsclust = new PrintStream(readsClustered)
-          return Some((hapout, hapclout, readsclust))
-        } catch {
-          case _: Throwable => println("Cannot create file: " + readsClustered); return None
-        }
+        val readsout = new PrintStream(clusteredReadsOutputName)
+        Some((mainout, readsout))
       } catch {
-        case _: Throwable => println("Cannot create file: " + cleanedHapOutputName); return None
+        case _: Throwable => println("Cannot create file: " + clusteredReadsOutputName); None
       }
-    }
-    catch {
-      case _: Throwable => println("Cannot create file: " + hapOutputName); return None
+    } catch {
+      case _: Throwable => println("Cannot create file: " + mainOutputName); None
     }
   }
 
@@ -161,7 +151,7 @@ object OutputHandler {
     val k2 = Set(m2.keysIterator.toList: _*)
     val intersection = k1 & k2
 
-    val r1 = for (key <- intersection) yield (key -> (m1(key) ++ m2(key)))
+    val r1 = for (key <- intersection) yield key -> (m1(key) ++ m2(key))
     val r2 = m1.filterKeys(!intersection.contains(_)) ++ m2.filterKeys(!intersection.contains(_))
     r2 ++ r1
   }

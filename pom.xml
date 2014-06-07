@@ -6,7 +6,7 @@
 
     <groupId>edu.gsu.cs</groupId>
     <artifactId>kgem</artifactId>
-    <version>0.5c</version>
+    <version>0.7c</version>
     <packaging>jar</packaging>
 
     <name>KGEM</name>
@@ -24,49 +24,8 @@
             <email>nmancuso@cs.gsu.edu</email>
         </developer>
     </developers>
-
-    <distributionManagement>
-        <repository>
-            <id>internal.repo</id>
-            <name>Temporary Staging Repository</name>
-            <url>file://${project.build.directory}/mvn-repo</url>
-        </repository>
-    </distributionManagement>
-
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <finalName>kgem-clustering-${project.version}</finalName>
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <archive>
-                        <manifest>
-                            <mainClass>edu.gsu.cs.kgem.exec.Main</mainClass>
-                            <addDefaultImplementationEntries>
-                                true
-                            </addDefaultImplementationEntries>
-                        </manifest>
-                        <manifestEntries>
-                            <mode>development</mode>
-
-                            <url>${project.url}</url>
-                            <author>Alex Artyomenko</author>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -84,53 +43,117 @@
                     <execution>
                         <goals>
                             <goal>compile</goal>
-                            <goal>testCompile</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <sourceDir>src</sourceDir>
                     <jvmArgs>
                         <jvmArg>-Xms1024m</jvmArg>
                         <jvmArg>-Xmx1g</jvmArg>
                     </jvmArgs>
+                    <sourceDir>src</sourceDir>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>pack</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.4</version>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <finalName>kgem-clustering-${project.version}</finalName>
+                            <archive>
+                                <manifest>
+                                    <mainClass>edu.gsu.cs.kgem.exec.Main</mainClass>
+                                    <addDefaultImplementationEntries>
+                                        true
+                                    </addDefaultImplementationEntries>
+                                </manifest>
+                                <manifestEntries>
+                                    <mode>development</mode>
+
+                                    <url>${project.url}</url>
+                                    <author>Alex Artyomenko</author>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>alan</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.7</version>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <configuration>
+                                    <target>
+                                        <exec
+                                                dir="${project.build.directory}"
+                                                executable="scp"
+                                                failonerror="false">
+                                            <arg line="${project.build.finalName}-jar-with-dependencies.jar alan:/home/code/KGEM/${project.build.finalName}.jar"/>
+                                        </exec>
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-compiler</artifactId>
+            <version>2.11.0</version>
+        </dependency>
         <dependency>
             <groupId>org.biojava</groupId>
             <artifactId>biojava3-core</artifactId>
             <version>3.0.5</version>
         </dependency>
         <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>2.10.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-compiler</artifactId>
-            <version>2.10.3</version>
-        </dependency>
-        <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.10</artifactId>
+            <artifactId>scalatest_2.11</artifactId>
             <version>2.1.3</version>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>junit</groupId>-->
-            <!--<artifactId>junit</artifactId>-->
-            <!--<version>4.0</version>-->
-        <!--</dependency>-->
-        <!-- other biojava jars as needed -->
         <dependency>
             <groupId>com.github.scopt</groupId>
-            <artifactId>scopt_2.10</artifactId>
+            <artifactId>scopt_2.11</artifactId>
             <version>3.2.0</version>
         </dependency>
         <dependency>
@@ -146,12 +169,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jakewharton</groupId>
-            <artifactId>github-deploy-maven-plugin</artifactId>
-            <version>1.0.1</version>
+            <version>3.2</version>
         </dependency>
     </dependencies>
     <pluginRepositories>

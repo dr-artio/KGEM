@@ -17,26 +17,26 @@ object Clusterer {
    * Clustering coefficients
    */
   def getClusteredFastaSequencies(gens: Iterable[Genotype], reads: Iterable[Read],
-                           pqrs: Array[Array[Double]], rs: Map[String, DNASequence], k: Int) = {
+                                  pqrs: Array[Array[Double]], rs: Map[String, DNASequence], k: Int) = {
     var i = -1
     val genSeqs = gens.map(g => (g, g.toIntegralString.replaceAll("-", "").replaceAll("N", ""))).toList
 
     val groups = cluster(reads, pqrs, genSeqs, rs)
 
     groups.map(rd => {
-        i+=1
-        rd._2.map(r => {
-          val ds = rs(r._1.ids.head)
-          ds.setOriginalHeader("c%d_h%d_%s_%d".format(rd._1.ID, rd._1.ID, ds.getOriginalHeader, r._1.ids.size))
-          ds
-        })
-      }).flatten
+      i += 1
+      rd._2.map(r => {
+        val ds = rs(r._1.ids.head)
+        ds.setOriginalHeader("c%d_h%d_%s_%d".format(rd._1.ID, rd._1.ID, ds.getOriginalHeader, r._1.ids.size))
+        ds
+      })
+    }).flatten
   }
 
   private def cluster(reads: Iterable[Read], pqrs: Array[Array[Double]],
                       genSeqs: List[(Genotype, String)],
                       rs: Map[String, DNASequence]) = {
-    val res =  finalizeClustering(reads, pqrs, Map[(Read, Int), Genotype](), genSeqs, rs)
+    val res = finalizeClustering(reads, pqrs, Map[(Read, Int), Genotype](), genSeqs, rs)
 
     res
   }

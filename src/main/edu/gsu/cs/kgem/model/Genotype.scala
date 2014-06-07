@@ -28,7 +28,7 @@ object Genotype {
   val sMap: Map[String, Set[NucleotideCompound]] = reverseMap(nuclMap)
 
   val N = "N"
-  val eps = 0.025
+  var eps = 0.0025
   private var id = 0
 
   private def generateID = {
@@ -41,7 +41,7 @@ object Genotype {
     mp.foreach((e: (K, V)) => {
       r(e._2) += e._1
     })
-    return r.map((e: (V, mutable.Set[K])) => e._1 -> e._2.toSet)
+    r.map((e: (V, mutable.Set[K])) => e._1 -> e._2.toSet)
   }
 
   def nameForCompound(n: NucleotideCompound) = nuclMap(n)
@@ -97,15 +97,15 @@ class Genotype(n: Int) {
     })
   }
 
-  def sqNormalize = {
-    normalize
+  private def sqNormalize() = {
+    normalize()
     data foreach (m => {
       val s = m.values.map(v => v * v).sum
       if (s != 0) m foreach (e => m(e._1) /= s)
     })
   }
 
-  private def normalize = {
+  private def normalize() = {
     data foreach (m => {
       val s = m.values.sum
       if (s != 0) m foreach (e => m(e._1) /= s)
@@ -119,7 +119,7 @@ class Genotype(n: Int) {
       m foreach (e => m(e._1) = eps)
       if (s._2 > ss) m(s._1) = 1
     })
-    sqNormalize
+    sqNormalize()
     data
   }
 
@@ -131,12 +131,12 @@ class Genotype(n: Int) {
       if (mm._2 > avg) mm._1
       else N
     })
-    s.toString
+    s.toString()
   }
 
   override def toString = {
     val s = new StringBuilder
     data foreach (m => s ++= (m + "\n"))
-    s.toString
+    s.toString()
   }
 }
