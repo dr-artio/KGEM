@@ -1,6 +1,8 @@
 package edu.gsu.cs.kgem
 
+import com.typesafe.scalalogging.slf4j.Logger
 import edu.gsu.cs.kgem.model._
+import org.slf4j.LoggerFactory
 import collection.mutable
 import edu.gsu.cs.kgem.io.{ArgumentParser, SAMParser}
 import java.io.{PrintStream, File}
@@ -24,7 +26,8 @@ import scala.collection.parallel.TaskSupport
  */
 package object exec {
   val USER_DIR = "user.dir"
-  val KGEM_STR = "kGEM version %s: Local Reconstruction for Mixed Viral Populations."
+  val NAME = "kGEM"
+  val KGEM_STR = "kGEM v.%s: Local Reconstruction for Mixed Viral Populations."
   var numproc: TaskSupport = null
 
   //private values and variables
@@ -39,6 +42,7 @@ package object exec {
   private var threshold: Int = 0
   private var n: Int = 0
   private var seeds: Iterable[Genotype] = null
+  private val logger = Logger(LoggerFactory.getLogger(NAME))
 
   //Public methods
   /**
@@ -77,7 +81,9 @@ package object exec {
       if (pr_threshold >= 0) KGEM.initThreshold(pr_threshold)
       else KGEM.initThreshold(reads.head.getLength)
 
-      val seeds = MaxDistanceSeedFinder.findSeeds(this.reads, k, threshold)
+      log("Initializing seeds...")
+
+      val seeds = MaxDistanceSeedFinder.findSeeds(this.reads, k, threshold, KGEM.threshold)
       KGEM.run(seeds)
     } else {
       KGEM.run(seeds)
@@ -285,7 +291,7 @@ package object exec {
 
   def log(mes: String) = {
     val date = new Date()
-    println("%s %s".format(sdf.format(date), mes))
+    logger.info("%s %s".format(sdf.format(date), mes))
   }
 
   /**

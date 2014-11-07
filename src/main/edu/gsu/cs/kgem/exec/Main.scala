@@ -35,7 +35,7 @@ object Main {
     val s = System.currentTimeMillis
     parseArgs(args)
     printGreetings()
-    log("Reading input files...")
+    log("Reading input...")
     initInputData()
     log("KGEM started...")
     val gens = executeKgem()

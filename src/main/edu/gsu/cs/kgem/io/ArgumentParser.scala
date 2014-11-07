@@ -6,7 +6,7 @@ import edu.gsu.cs.kgem.exec.{KGEM_STR, Main}
 import scala.collection.parallel.{ForkJoinTaskSupport, TaskSupport}
 import scala.concurrent.forkjoin.ForkJoinPool
 
-case class Config(readsFile: File = null, k: Int = 50, threshold: Int = 3,
+case class Config(readsFile: File = null, k: Int = 50, threshold: Int = 2,
                   consensusFile: File = null, prThr: Double = -1, epsilon: Double = 0.0025,
                   is_reads: Boolean = false, is_cleaned: Boolean = false,
                   output: File = null, numproc: TaskSupport = null)

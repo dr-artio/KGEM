@@ -23,15 +23,15 @@ class EM(gens: List[Genotype], reads: List[Read]) {
   var freqs = Array.fill(gens.size) {
     1.0 / gens.size
   }
+  val total = reads.map(r => r.freq).sum
   var rFreqs = {
     val d = new Array[Double](reads.size)
-    val s = (reads.map(r => r.freq) sum)
+    val s = total
     reads.zipWithIndex foreach (e => {
       d(e._2) = e._1.freq / s
     })
     d
   }
-  val total = reads.map(r => r.freq).sum
 
   /**
    * Initialize h_rs in two dimensional grid of
@@ -48,8 +48,8 @@ class EM(gens: List[Genotype], reads: List[Read]) {
     }
     var g = 0
 
-    while (g < gens.size) {
-      val gen = gens(g)
+    for (gen <- gens.par) {
+      val g = gens.indexOf(gen)
       val lm = gen.data.length
       var i = 0
       while (i < lm) {
@@ -64,8 +64,8 @@ class EM(gens: List[Genotype], reads: List[Read]) {
         }
         i += 1
       }
-      g += 1
     }
+    log("h_rs initialized.")
     hrs
   }
 

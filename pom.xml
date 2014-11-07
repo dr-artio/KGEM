@@ -3,15 +3,12 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>edu.gsu.cs</groupId>
     <artifactId>kgem</artifactId>
-    <version>0.7</version>
     <packaging>jar</packaging>
-
     <name>KGEM</name>
+    <version>0.7</version>
     <url>http://alan.cs.gsu.edu/NGS/?q=content/kgem</url>
-
     <developers>
         <developer>
             <id>night-stalker</id>
@@ -65,25 +62,6 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-assembly-plugin</artifactId>
                         <version>2.4</version>
-                        <configuration>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                            <archive>
-                                <manifest>
-                                    <mainClass>edu.gsu.cs.kgem.exec.Main</mainClass>
-                                    <addDefaultImplementationEntries>
-                                        true
-                                    </addDefaultImplementationEntries>
-                                </manifest>
-                                <manifestEntries>
-                                    <mode>development</mode>
-
-                                    <url>${project.url}</url>
-                                    <author>Alex Artyomenko</author>
-                                </manifestEntries>
-                            </archive>
-                        </configuration>
                         <executions>
                             <execution>
                                 <phase>compile</phase>
@@ -92,6 +70,22 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                    <mainClass>edu.gsu.cs.kgem.exec.Main</mainClass>
+                                </manifest>
+                                <manifestEntries>
+                                    <author>Alex Artyomenko</author>
+                                    <mode>development</mode>
+                                    <url>${project.url}</url>
+                                </manifestEntries>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -106,19 +100,16 @@
                         <executions>
                             <execution>
                                 <phase>compile</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
                                 <configuration>
                                     <target>
-                                        <exec
-                                                dir="${project.build.directory}"
-                                                executable="scp"
-                                                failonerror="false">
+                                        <exec dir="${project.build.directory}" executable="scp" failonerror="false">
                                             <arg line="${project.build.finalName}-jar-with-dependencies.jar alan:/home/code/KGEM/${project.build.finalName}.jar"/>
                                         </exec>
                                     </target>
                                 </configuration>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
                             </execution>
                         </executions>
                     </plugin>
@@ -126,58 +117,6 @@
             </build>
         </profile>
     </profiles>
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-    <dependencies>
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>2.11.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-compiler</artifactId>
-            <version>2.11.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.biojava</groupId>
-            <artifactId>biojava3-core</artifactId>
-            <version>3.0.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.11</artifactId>
-            <version>2.1.3</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.scopt</groupId>
-            <artifactId>scopt_2.11</artifactId>
-            <version>3.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.utgenome.thirdparty</groupId>
-            <artifactId>picard</artifactId>
-            <version>1.102.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
-            <version>3.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.2</version>
-        </dependency>
-    </dependencies>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>scala-tools.org</id>
-            <name>Scala-tools Maven2 Repository</name>
-            <url>http://scala-tools.org/repo-releases</url>
-        </pluginRepository>
-    </pluginRepositories>
     <repositories>
         <repository>
             <id>biojava-maven-repo</id>
@@ -190,4 +129,66 @@
             <url>http://github.com/scopt/scopt</url>
         </repository>
     </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>scala-tools.org</id>
+            <name>Scala-tools Maven2 Repository</name>
+            <url>http://scala-tools.org/repo-releases</url>
+        </pluginRepository>
+    </pluginRepositories>
+    <dependencies>
+        <dependency>
+            <groupId>com.github.scopt</groupId>
+            <artifactId>scopt_2.11</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.scala-logging</groupId>
+            <artifactId>scala-logging-slf4j_2.11</artifactId>
+            <version>2.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.biojava</groupId>
+            <artifactId>biojava3-core</artifactId>
+            <version>3.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-compiler</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.11</artifactId>
+            <version>2.1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.utgenome.thirdparty</groupId>
+            <artifactId>picard</artifactId>
+            <version>1.102.0</version>
+        </dependency>
+    </dependencies>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 </project>

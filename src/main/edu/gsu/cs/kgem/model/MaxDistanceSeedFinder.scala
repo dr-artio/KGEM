@@ -27,22 +27,26 @@ object MaxDistanceSeedFinder {
    * Min hamming distance between seeds
    * @return
    */
-  def findSeeds(reads: Iterable[Read], k: Int, threshold: Int): Iterable[Genotype] = {
+  def findSeeds(reads: Iterable[Read], k: Int, threshold: Int, count_threshold: Int): Iterable[Genotype] = {
     val readArr = reads.toArray
     val first = getFirstSeed(readArr)
     var seeds = new mutable.MutableList[Read]()
     seeds += first
-    var distanceMap = readArr.view.filter(r => !r.equals(first)).map(r => (r, hammingDistance(first, r))).force
-    var maxHD = 0.0
-    while (seeds.size < k) {
+    var distanceMap = readArr.view.filter(r => !r.equals(first)).map(r => r -> hammingDistance(first, r) * r.freq).toMap
+    var maxHD = Double.MaxValue
+    var count = 0.0
+    log("Count threshold: %d".format(threshold))
+    while (seeds.size < k && (maxHD >= threshold || count > count_threshold)) {
       if (distanceMap.isEmpty) return seeds.map(r => new Genotype(r.seq))
-      val cur = distanceMap.maxBy(e => e._2)
-      maxHD = cur._2
-      if (cur._2 < threshold) return seeds.map(r => new Genotype(r.seq))
+      val cur = distanceMap.maxBy(r => r._2 * r._1.freq)
+      maxHD = distanceMap.view.map(r => r._2 / r._1.freq).max
+
+      if (maxHD < threshold) count = readArr.view.filter(r => hammingDistance(r, cur._1) < distanceMap(r) / r.freq).map(_.freq).sum
       seeds += cur._1
-      distanceMap = distanceMap.map(e => (e._1, min(e._2, hammingDistance(cur._1, e._1))))
+      distanceMap = distanceMap.map(e => e._1 -> min(e._2, hammingDistance(cur._1, e._1) * e._1.freq)).toMap
     }
-    log("Final max Hamming Distance: %.0f".format(maxHD))
+    log("Estimated k: %d".format(seeds.size))
+    log("Final max distance: %.0f count: %.0f".format(maxHD, count))
     seeds.map(r => new Genotype(r.seq))
   }
 
