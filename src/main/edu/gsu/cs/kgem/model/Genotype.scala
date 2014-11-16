@@ -60,17 +60,7 @@ class Genotype(n: Int) {
 
   def this(str: String) = {
     this(str.length)
-    var i = 0
-    for (d <- data) {
-      val cur_symb = str(i).toString
-      if (d.contains(cur_symb))
-        d(cur_symb) = 1.0
-      else {
-        val avg = 1.0 / d.size
-        d.keys.foreach(k => d(k) = avg)
-      }
-      i += 1
-    }
+    addRead(str)
     round
   }
 
@@ -89,10 +79,21 @@ class Genotype(n: Int) {
    * and sequence.
    */
   @inline
-  def addRead(r: Read) = {
-    var s = r.beg
-    r.seq foreach (c => {
-      data(s)(c.toString) += 1
+  def addRead(r: Read): Unit = {
+    addRead(r.seq, r.beg, r.freq)
+  }
+
+  private def addRead(str: String, b: Int = 0, freq: Double = 1.0): Unit = {
+    var s = b
+    str.seq foreach (c => {
+      val d = data(s)
+      val cur_symb = c.toString
+      if (d.contains(cur_symb))
+        d(cur_symb) += freq
+      else {
+        val avg = freq / d.size
+        d.keys.foreach(k => d(k) = avg)
+      }
       s += 1
     })
   }

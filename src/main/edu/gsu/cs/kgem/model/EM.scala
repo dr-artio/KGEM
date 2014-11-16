@@ -90,7 +90,9 @@ class EM(gens: List[Genotype], reads: List[Read]) {
     val rSums = new Array[Double](reads.size)
     rs foreach (r => {
       gs foreach (g => {
-        pqrs(g)(r) = freqs(g) * h_rs(g)(r)
+        var h = h_rs(g)(r)
+        if (h == Double.PositiveInfinity) h = Double.MaxValue
+        pqrs(g)(r) = freqs(g) * h
         rSums(r) += pqrs(g)(r)
       })
     })
