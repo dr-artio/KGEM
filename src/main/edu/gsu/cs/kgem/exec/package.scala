@@ -68,10 +68,10 @@ package object exec {
   def executeKgem(reads: List[DNASequence] = seqs, k: Int = k, numproc: TaskSupport = config.numproc, threshold: Int = threshold,
                   eps: Double = config.epsilon, pr_threshold: Double = config.prThr,
                   seeds: Iterable[Genotype] = seeds): List[Genotype] = {
-    //    if (numproc != null ) {
-    //      this.numproc = numproc
-    //      log("numproc set %d.".format(this.numproc.parallelismLevel))
-    //    }
+    if (numproc != null ) {
+      this.numproc = numproc
+      log("numproc set %d.".format(this.numproc.parallelismLevel))
+    }
     this.reads = convertFastaReads(reads).toList
     n = this.reads.map(r => r.freq).sum.toInt
     KGEM.initReads(this.reads.toList)
@@ -83,7 +83,7 @@ package object exec {
 
       log("Initializing seeds...")
 
-      val seeds = MaxDistanceSeedFinder.findSeeds(this.reads, k, threshold, KGEM.threshold)
+      val seeds = MaxCorrelationSeedFinder.findSeeds(this.reads, k, threshold, KGEM.threshold)
       KGEM.run(seeds)
     } else {
       KGEM.run(seeds)

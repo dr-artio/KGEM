@@ -18,9 +18,10 @@ class Read(rc: SAMRecord) {
   var ids: Set[String] = null
 
   override def equals(obj: Any) = {
-    if (obj.isInstanceOf[Read]) {
-      val or = obj.asInstanceOf[Read]
-      seq.equals(or.seq) && beg == or.beg
+    obj match {
+      case or: Read =>
+        seq.equals(or.seq) && beg == or.beg
+      case _ =>
     }
     false
   }

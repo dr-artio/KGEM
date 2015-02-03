@@ -1,8 +1,10 @@
 package edu.gsu.cs.kgem.model
 
+import org.apache.commons.math3.distribution.BinomialDistribution
 import org.biojava3.core.sequence.compound.{DNACompoundSet, NucleotideCompound}
 import collection.JavaConversions._
 import collection.mutable
+import scala.collection.mutable.ListBuffer
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,18 +20,19 @@ object Genotype {
    * string representations of nucleotides
    * (current DNA alphabet)
    */
+  val N = 'N'
+  var eps = 0.0025
+  private var id = 0
+  private val p_value = 0.05
+
   val nuclMap: Map[NucleotideCompound, String] = {
     DNACompoundSet.getDNACompoundSet.getAllCompounds.map(n => {
       var s = n.getShortName.toUpperCase
-      if (s == "N") s = "-"
+      if (s.charAt(0) == N) s = "-"
       (n, s)
     }).toMap
   }
   val sMap: Map[String, Set[NucleotideCompound]] = reverseMap(nuclMap)
-
-  val N = "N"
-  var eps = 0.0025
-  private var id = 0
 
   private def generateID = {
     id += 1
@@ -41,7 +44,7 @@ object Genotype {
     mp.foreach((e: (K, V)) => {
       r(e._2) += e._1
     })
-    return r.map((e: (V, mutable.Set[K])) => e._1 -> e._2.toSet)
+    r.map((e: (V, mutable.Set[K])) => e._1 -> e._2.toSet)
   }
 
   def nameForCompound(n: NucleotideCompound) = nuclMap(n)
@@ -51,9 +54,17 @@ import Genotype._
 
 class Genotype(n: Int) {
   val ID = generateID
+  private var epsi = -1.0
+  private val erronius_snps = new ListBuffer[(Char, Int)]()
+  var size = 0.0
+  val coverage = new Array[Double](n)
+  val reads = new ListBuffer[Read]()
+  val table = Array.fill[mutable.Map[Char, ListBuffer[Read]]](n) {
+     mutable.Map(sMap.keys.map(s => s.charAt(0) -> new ListBuffer[Read]()).toSeq: _*)
+  }
 
-  val data: List[mutable.Map[String, Double]] = {
-    List.range(0, n).map(i => mutable.Map(sMap.keys.map(s => (s, 0D)).toSeq: _*))
+  val data: List[mutable.Map[Char, Double]] = {
+    List.range(0, n).map(i => mutable.Map(sMap.keys.map(s => (s.charAt(0), 0D)).toSeq: _*))
   }
   var freq = 1.0
   var convergen = false
@@ -64,10 +75,9 @@ class Genotype(n: Int) {
     round
   }
 
-  def this(reads: List[Read]) = {
+  def this(reads: Iterable[Read]) = {
     this(reads.map(r => r.end).max)
     for (r <- reads) addRead(r)
-    round
   }
 
   /**
@@ -81,32 +91,172 @@ class Genotype(n: Int) {
   @inline
   def addRead(r: Read): Unit = {
     addRead(r.seq, r.beg, r.freq)
+    reads += r
+    addReadToTable(r)
+  }
+
+  @inline
+  def removeRead(r: Read): Unit = {
+    removeRead(r.seq, r.beg, r.freq)
+    reads -= r
+    removeReadFromTable(r)
+  }
+
+  private def addReadToTable(r: Read): Unit = {
+    for (c <- r.seq.zipWithIndex.par) {
+      if (table(c._2) contains c._1)
+        table(c._2)(c._1) += r
+    }
+  }
+
+  private def removeReadFromTable(r: Read): Unit = {
+    for (c <- r.seq.zipWithIndex.par) {
+      if (table(c._2) contains c._1)
+        table(c._2)(c._1) -= r
+    }
   }
 
   private def addRead(str: String, b: Int = 0, freq: Double = 1.0): Unit = {
-    var s = b
-    str.seq foreach (c => {
+    size += freq
+    epsi = -1.0
+    str.zipWithIndex.par foreach (c => {
+      val s = c._2
       val d = data(s)
-      val cur_symb = c.toString
-      if (d.contains(cur_symb))
+      val cur_symb = c._1
+      if (d.contains(cur_symb)) {
+        coverage(s) += freq
         d(cur_symb) += freq
-      else {
-        val avg = freq / d.size
-        d.keys.foreach(k => d(k) = avg)
       }
-      s += 1
     })
   }
 
-  def sqNormalize = {
-    normalize
+  private def removeRead(str: String, b: Int = 0, freq: Double = 1.0): Unit = {
+    size -= freq
+    epsi = -1.0
+    str.zipWithIndex.par foreach (c => {
+      val s = c._2
+      val d = data(s)
+      val cur_symb = c._1
+      if (d.contains(cur_symb)) {
+        if (coverage(s) > 0.0) {
+          coverage(s) -= freq
+          d(cur_symb) -= freq
+        }
+      }
+    })
+  }
+
+  def getSecondHaplotype = {
+    val snps = findCorrelatedSNPs
+    if (snps.size > 1) {
+      val majorHaplotype = toIntegralString
+      val secondHaplotype = new StringBuffer()
+      for (c <- majorHaplotype.zipWithIndex) {
+        val snp = snps.find(s => s._2 == c._2)
+        if (snp != None)
+          secondHaplotype.append(snp.get._1)
+        else
+          secondHaplotype.append(c._1)
+      }
+      secondHaplotype.toString
+    } else ""
+  }
+
+  def findCorrelatedSNPs = {
+    val snps = data.zipWithIndex.filter(m => {
+      val s = coverage(m._2)
+      if (s > 0)
+        (1 - m._1.values.max / s) > epsilon / 3
+      else
+        false
+    })
+    var selectedSnps = snps.map(s => {
+      val M = s._1.maxBy(_._2)
+      val m = s._1.filter(_ != M).maxBy(_._2)
+      (m._1, s._2, m._2)
+    }).filterNot(x => erronius_snps contains (x._1, x._2)).sortBy(-_._3)
+
+    val correlatedSnps = new ListBuffer[(Char, Int)]()
+
+    println(selectedSnps)
+
+    while(correlatedSnps.size < 2 && selectedSnps.size > 1){
+      correlatedSnps.clear()
+      val firstSnp = selectedSnps.head
+      correlatedSnps += ((firstSnp._1, firstSnp._2))
+      println(firstSnp)
+      var cond = true
+      while(cond) {
+        val correlationMap = selectedSnps.filterNot(s => correlatedSnps.contains((s._1, s._2))).par
+          .map(x => (x._1, x._2) -> correlatedSnps.map(c => correlation(c._2, c._1, x._2, x._1)).max).toMap
+        val newSnp = correlationMap.minBy(_._2)
+        println(newSnp)
+        cond = newSnp._2 <= p_value
+        if (cond) {
+          correlatedSnps += newSnp._1
+          println("SNPs: %d".format(correlatedSnps.size))
+          println(correlatedSnps)
+          println(correlation(newSnp._1._2, newSnp._1._1, firstSnp._2, firstSnp._1))
+        }
+      }
+      if (correlatedSnps.size == 1) erronius_snps += ((selectedSnps.head._1, selectedSnps.head._2))
+      selectedSnps = selectedSnps.tail
+    }
+
+    correlatedSnps.toList
+  }
+
+  def linkageDisequilibrium(i: Int, ci: Char, j: Int, cj: Char): Boolean = {
+    correlation(i, ci, j, cj) <= p_value
+  }
+
+  def intersect(A: Iterable[Read], B: Iterable[Read]): Iterable[Read] = {
+    val AB = A ++ B
+    val sAB = AB.toList.sortBy(_.seq)
+
+    sAB.sliding(2).filter(x => x.head == x.tail.head).map(_.head).toList
+  }
+
+  def correlation(i: Int, ci: Char, j: Int, cj: Char): Double = {
+    if (Math.abs(i-j) <= 2) return 1.0
+    val MA = data(i).maxBy(_._2)
+    val MB = data(j).maxBy(_._2)
+    val x_11 = intersect(table(i)(MA._1), table(j)(MB._1))
+    val x_12 = intersect(table(i)(MA._1), table(j)(cj))
+    val x_21 = intersect(table(i)(ci), table(j)(MB._1))
+    val x_22 = intersect(table(i)(ci), table(j)(cj))
+    var X_11 = x_11.map(_.freq).sum
+    var X_12 = x_12.map(_.freq).sum
+    var X_21 = x_21.map(_.freq).sum
+    var X_22 = x_22.map(_.freq).sum
+    val X = X_11 + X_12 + X_21 + X_22
+    val p = (X_12 * X_21 / X_11) / X
+    val dist = new BinomialDistribution(X.toInt, p)
+//    X_11 /= X
+//    X_12 /= X
+//    X_21 /= X
+//    X_22 /= X
+
+    val res = 1.0 - dist.cumulativeProbability(X_22.toInt)
+    res
+  }
+
+
+  def normalizedValue(i: Int, c: Char): Double = {
+    if (data.length > i && i >= 0 && data(i).contains(c))
+      return data(i)(c) / coverage(i)
+    0
+  }
+
+  def sqNormalize() = {
+    normalize()
     data foreach (m => {
       val s = m.values.map(v => v * v).sum
       if (s != 0) m foreach (e => m(e._1) /= s)
     })
   }
 
-  private def normalize = {
+  private def normalize() = {
     data foreach (m => {
       val s = m.values.sum
       if (s != 0) m foreach (e => m(e._1) /= s)
@@ -120,24 +270,35 @@ class Genotype(n: Int) {
       m foreach (e => m(e._1) = eps)
       if (s._2 > ss) m(s._1) = 1
     })
-    sqNormalize
+    sqNormalize()
     data
   }
 
   def toIntegralString = {
     val s = new StringBuilder
-    data foreach (m => s ++= {
-      val avg = 1.01 * m.map(e => e._2).sum / m.size
-      val mm = m.maxBy(e => e._2)
+    data foreach (m => s.append({
+      val avg = 1.001 * m.map(_._2).sum / m.size
+      val mm = m.maxBy(_._2)
       if (mm._2 > avg) mm._1
       else N
-    })
-    s.toString
+    }))
+    s.toString()
+  }
+
+  def epsilon = {
+    if (epsi < 0) {
+      val s = data.map(m => {
+        val s = m.values.sum
+        if (s > 0) 1 - m.values.max / s else 0
+      }).sum
+      epsi = s / data.length
+    }
+    epsi
   }
 
   override def toString = {
     val s = new StringBuilder
     data foreach (m => s ++= (m + "\n"))
-    s.toString
+    s.toString()
   }
 }

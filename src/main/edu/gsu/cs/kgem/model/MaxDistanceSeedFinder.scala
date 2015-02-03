@@ -1,8 +1,10 @@
 package edu.gsu.cs.kgem.model
 
+import java.lang.Math.min
+
 import edu.gsu.cs.kgem.exec.log
+
 import scala.collection.mutable
-import Math.min
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,7 +14,7 @@ import Math.min
  * Class to wrap derandomized KGEM, i. e. initialization with maximizing distance between
  * seeds and detection of size of the population via distance threshold.
  */
-object MaxDistanceSeedFinder {
+object MaxDistanceSeedFinder extends SeedFinder {
 
   /**
    * Find seeds according to maximization Hamming distance between all pairs
@@ -32,7 +34,7 @@ object MaxDistanceSeedFinder {
     val first = getFirstSeed(readArr)
     var seeds = new mutable.MutableList[Genotype]()
     seeds += new Genotype(first.seq)
-    var distanceMap = readArr.view.filter(r => !r.equals(first)).map(r => r -> hammingDistance(first, r) * r.freq).toMap
+    var distanceMap = readArr.view.filter(r => !r.equals(first)).map(r => r -> hammingDistance(first.seq, r.seq) * r.freq).toMap
     var maxHD = Double.MaxValue
     var count = maxHD
     log("Count threshold: %d".format(count_threshold))
@@ -71,49 +73,5 @@ object MaxDistanceSeedFinder {
     //val s = candidates.size
     //val rnd = new Random()
     //candidates(rnd.nextInt(s))
-  }
-
-  /**
-   * Wrapper for hamming distance between reads
-   * @param r1
-   * Read 1
-   * @param r2
-   * Read 2
-   * @return
-   * Hamming Distance between reads
-   */
-  @inline
-  private def hammingDistance(r1: Read, r2: Read): Double = {
-    if (r1.equals(r2)) return 0
-    hammingDistance(r1.seq, r2.seq)
-  }
-
-  /**
-   * Compute hamming distance between two strings
-   * of the same length
-   * @param s
-   * String 1
-   * @param t
-   * String 2
-   * @return
-   * Hamming distance between s and t if
-   * their length is the same and -1
-   * otherwise
-   */
-  @inline
-  def hammingDistance(s: String, t: String): Double = {
-    val l = s.length
-    if (l != t.length) {
-      throw new IllegalArgumentException("Hamming Distance: Strings have different lengths")
-    }
-    var r = 0.0
-    for (i <- 0 until l) {
-      if (s(i) != t(i) && s(i) != 'N' && t(i) != 'N' && t(i) != ' ' && s(i) != ' ') {
-        r += 1
-      } else if (s(i) != t(i) && (s(i) == 'N' || t(i) == 'N' || t(i) == ' ' || s(i) == ' '))  {
-        r += 0.2
-      }
-    }
-    r
   }
 }

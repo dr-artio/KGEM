@@ -116,7 +116,7 @@ object KGEM {
       for (n <- rs.keys) {
         val res = rs(n)
         for (r <- res)
-          e._1(n) += pqs(r._2)
+          e._1(n.charAt(0)) += pqs(r._2)
       }
     }
     g.convergen = prev.equals(g.toIntegralString) || (g.freq < tr)

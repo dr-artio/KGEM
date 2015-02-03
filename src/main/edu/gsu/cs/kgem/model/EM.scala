@@ -54,8 +54,8 @@ class EM(gens: List[Genotype], reads: List[Read]) {
       var i = 0
       while (i < lm) {
         for (c <- KGEM.table(i)) {
-          if (gen.data(i).contains(c._1)) {
-            val multiplier = gen.data(i)(c._1)
+          if (gen.data(i).contains(c._1.charAt(0))) {
+            val multiplier = gen.data(i)(c._1.charAt(0))
             for (r <- c._2) {
               val j = r._2
               hrs(g)(j) *= multiplier
