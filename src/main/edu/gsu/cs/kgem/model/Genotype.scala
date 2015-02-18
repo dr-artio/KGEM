@@ -23,7 +23,7 @@ object Genotype {
   val N = 'N'
   var eps = 0.0025
   private var id = 0
-  private val p_value = 0.05
+
 
   val nuclMap: Map[NucleotideCompound, String] = {
     DNACompoundSet.getDNACompoundSet.getAllCompounds.map(n => {
@@ -53,6 +53,7 @@ object Genotype {
 import Genotype._
 
 class Genotype(n: Int) {
+  private var p_value = 0.05
   val ID = generateID
   private var epsi = -1.0
   private val erronius_snps = new ListBuffer[(Char, Int)]()
@@ -97,9 +98,11 @@ class Genotype(n: Int) {
 
   @inline
   def removeRead(r: Read): Unit = {
-    removeRead(r.seq, r.beg, r.freq)
-    reads -= r
-    removeReadFromTable(r)
+    if (reads contains r) {
+      removeRead(r.seq, r.beg, r.freq)
+      reads -= r
+      removeReadFromTable(r)
+    }
   }
 
   private def addReadToTable(r: Read): Unit = {
@@ -162,52 +165,59 @@ class Genotype(n: Int) {
     } else ""
   }
 
-  def findCorrelatedSNPs = {
-    val snps = data.zipWithIndex.filter(m => {
-      val s = coverage(m._2)
-      if (s > 0)
-        (1 - m._1.values.max / s) > epsilon / 3
-      else
-        false
-    })
+  def getSecondGenotype = {
+    val snps = findCorrelatedSNPs
+    if (snps.size > 1) {
+      val sreads = reads.filter(r => snps.forall(s => r.seq(s._2) == s._1))
+      if (sreads.size > 2) {
+        p_value *= 5
+        new Genotype(sreads)
+      } else
+        None
+    }  else {
+      None
+    }
+  }
+
+  def findCorrelatedSNPs: Iterable[(Char, Int)] = {
+    val snps = data.zipWithIndex
+//      .filter(m => {
+//      val s = coverage(m._2)
+//      if (s > 0)
+//        (1 - m._1.values.max / s) > epsilon
+//      else
+//        false
+//    })
     var selectedSnps = snps.map(s => {
       val M = s._1.maxBy(_._2)
       val m = s._1.filter(_ != M).maxBy(_._2)
       (m._1, s._2, m._2)
-    }).filterNot(x => erronius_snps contains (x._1, x._2)).sortBy(-_._3)
+    }).sortBy(-_._3).takeWhile(x => x._3 >= KGEM.threshold)
 
     val correlatedSnps = new ListBuffer[(Char, Int)]()
 
-    println(selectedSnps)
-
-    while(correlatedSnps.size < 2 && selectedSnps.size > 1){
+    while(correlatedSnps.size < 2 && selectedSnps.size > 1) {
       correlatedSnps.clear()
       val firstSnp = selectedSnps.head
       correlatedSnps += ((firstSnp._1, firstSnp._2))
-      println(firstSnp)
-      var cond = true
-      while(cond) {
-        val correlationMap = selectedSnps.filterNot(s => correlatedSnps.contains((s._1, s._2))).par
-          .map(x => (x._1, x._2) -> correlatedSnps.map(c => correlation(c._2, c._1, x._2, x._1)).max).toMap
-        val newSnp = correlationMap.minBy(_._2)
-        println(newSnp)
-        cond = newSnp._2 <= p_value
-        if (cond) {
-          correlatedSnps += newSnp._1
-          println("SNPs: %d".format(correlatedSnps.size))
-          println(correlatedSnps)
-          println(correlation(newSnp._1._2, newSnp._1._1, firstSnp._2, firstSnp._1))
-        }
+      val snps = selectedSnps.par.filter(x => linkageDisequilibrium(x._2, x._1, firstSnp._2, firstSnp._1))
+
+      if (snps.nonEmpty){
+        val snp = snps.maxBy(x => correlation(x._2, x._1, firstSnp._2, firstSnp._1)._2)
+        correlatedSnps += ((snp._1, snp._2))
+        return correlatedSnps.toList
+      } else {
+        selectedSnps = selectedSnps.tail
       }
-      if (correlatedSnps.size == 1) erronius_snps += ((selectedSnps.head._1, selectedSnps.head._2))
-      selectedSnps = selectedSnps.tail
     }
 
+    //correlatedSnps.clear()
     correlatedSnps.toList
   }
 
   def linkageDisequilibrium(i: Int, ci: Char, j: Int, cj: Char): Boolean = {
-    correlation(i, ci, j, cj) <= p_value
+    val x = correlation(i, ci, j, cj)
+    x._1 <= p_value / Math.pow(table.length, 2) * 2
   }
 
   def intersect(A: Iterable[Read], B: Iterable[Read]): Iterable[Read] = {
@@ -217,8 +227,12 @@ class Genotype(n: Int) {
     sAB.sliding(2).filter(x => x.head == x.tail.head).map(_.head).toList
   }
 
-  def correlation(i: Int, ci: Char, j: Int, cj: Char): Double = {
-    if (Math.abs(i-j) <= 2) return 1.0
+  def correlation(i: Int, ci: Char, j: Int, cj: Char): (Double, Double) = {
+
+    // Default return
+    val d = (1.0, .0)
+
+    if (Math.abs(i-j) <= 1 || (ci == '-' && cj == '-')) return d
     val MA = data(i).maxBy(_._2)
     val MB = data(j).maxBy(_._2)
     val x_11 = intersect(table(i)(MA._1), table(j)(MB._1))
@@ -230,7 +244,8 @@ class Genotype(n: Int) {
     var X_21 = x_21.map(_.freq).sum
     var X_22 = x_22.map(_.freq).sum
     val X = X_11 + X_12 + X_21 + X_22
-    val p = (X_12 * X_21 / X_11) / X
+    val p = Math.max((X_12 * X_21 / X_11) / X, 10 / X)
+    if (p > 1) return d
     val dist = new BinomialDistribution(X.toInt, p)
 //    X_11 /= X
 //    X_12 /= X
@@ -238,7 +253,7 @@ class Genotype(n: Int) {
 //    X_22 /= X
 
     val res = 1.0 - dist.cumulativeProbability(X_22.toInt)
-    res
+    (res, X_22)
   }
 
 

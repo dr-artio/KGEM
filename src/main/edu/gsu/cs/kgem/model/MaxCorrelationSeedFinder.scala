@@ -23,47 +23,69 @@ object MaxCorrelationSeedFinder extends SeedFinder {
     val first = new Genotype(reads)
     log("Initial genotype constructed.")
     log("%s_eps: %f_size: %f".format(first.ID, first.epsilon, first.size))
+    var i = 0
+//    for (d <- first.data) {
+//      val m = d.values.max
+//      println("%d\t%.0f".format(i, d.values.sum - m))
+//      i += 1
+//    }
+
     seeds += first
     var cond = true
 
-    while (seeds.size < k && cond) {
+    while (seeds.size < k && !seeds.forall(_.convergen)) {
       log("Current size: %d".format(seeds.size))
+      cond = false
+      for (t <- seeds.filterNot(_.convergen)) {
 
-      val t = first
+        var newCenter = t.getSecondGenotype
+        var secondGenotype: Genotype = null
 
-      val oldCenter = t.toIntegralString
-      val newCenter = t.getSecondHaplotype
-      cond = newCenter.length > 0
-      if (cond) {
-        log("SNPs: %f".format(hammingDistance(oldCenter, newCenter)))
-
-        val newSeed = t.reads.par.filter(r => hammingDistance(newCenter, r.seq) < hammingDistance(oldCenter, r.seq)).seq
-        log("New seed size: %f".format(newSeed.map(_.freq).sum))
-        log("Initialize new seed...")
-        val seed = new Genotype(newSeed)
-        log("initialized.")
-        log("Update previous seed...")
-        for (r <- newSeed)
-          t.removeRead(r)
-        log("Updated")
-
-        log("New voronoi region size: %f".format(seed.size))
-        seeds += seed
-        for (s <- seeds) {
-          log("id: %s eps: %f size: %f".format(s.ID, s.epsilon, s.size))
-          val records = s.reads.map(x => {
-            x.ids.map(t => {
-              val rec = new DNASequence(x.seq)
-              rec.setOriginalHeader(t)
-              rec
-            })
-          }).flatten.asJava
-          FastaWriterHelper.writeNucleotideSequence(new File("/research_data/sasha/IAV_UCLA/%s.fas".format(s.ID)), records)
+        while (newCenter != None) {
+          log("Step of second haplotype search")
+          secondGenotype = newCenter.asInstanceOf[Genotype]
+          newCenter = secondGenotype.getSecondGenotype
         }
+        t.convergen = secondGenotype == null
+        if (secondGenotype != null ) {
+          for (r <- secondGenotype.reads) t.removeRead(r)
+          val oldCenter = t.toIntegralString
+          val newCenter = secondGenotype.toIntegralString
+          log("SNPs: %f".format(hammingDistance(oldCenter, newCenter)))
+
+          val newSeed = t.reads.par.filter(r => hammingDistance(newCenter, r.seq) < hammingDistance(oldCenter, r.seq)).seq
+          log("New seed size: %f".format(newSeed.map(_.freq).sum))
+          log("Initialize new seed...")
+          if (newSeed.size > 1) {
+            val seed = new Genotype(newSeed)
+            log("initialized.")
+            log("Update previous seed...")
+            for (r <- newSeed)
+              t.removeRead(r)
+            log("Updated")
+
+            log("New voronoi region size: %f".format(seed.size))
+            seeds += seed
+//            for (s <- seeds) {
+//              log("id: %s eps: %f size: %f".format(s.ID, s.epsilon, s.size))
+//              val records = s.reads.map(x => {
+//                x.ids.map(t => {
+//                  val rec = new DNASequence(x.seq)
+//                  rec.setOriginalHeader(t)
+//                  rec
+//                })
+//              }).flatten.asJava
+//              //FastaWriterHelper.writeNucleotideSequence(new File("/research_data/sasha/IAV_UCLA/%s.fas".format(s.ID)), records)
+//            }
+          }
+        }
+
       }
+
+
+      Genotype.eps = seeds.map(g => g.epsilon * g.size).sum / seeds.map(_.size).sum
+
     }
-    Genotype.eps = seeds.map(g => g.epsilon * g.size).sum / seeds.map(_.size).sum
     seeds.toList
   }
-
 }
