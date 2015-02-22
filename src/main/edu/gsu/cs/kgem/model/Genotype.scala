@@ -170,7 +170,7 @@ class Genotype(n: Int) {
     if (snps.size > 1) {
       val sreads = reads.filter(r => snps.forall(s => r.seq(s._2) == s._1))
       if (sreads.size > 2) {
-        p_value *= 5
+        //p_value += 0.05
         new Genotype(sreads)
       } else
         None
